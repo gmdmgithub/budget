@@ -2,6 +2,10 @@
 
 ## Quick Start
 
+* Structure of this code is based on:
+* * https://itnext.io/beautify-your-golang-project-f795b4b453aa
+* * https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091
+
 ### create project
 
 ``` bash
