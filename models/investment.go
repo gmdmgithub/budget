@@ -6,14 +6,13 @@ import "time"
 type Investment struct {
 	ID           string    `json:"_id"`
 	Name         string    `json:"name"`
-	Description  string    `json:"description"`
+	Comment      string    `json:"comment"`
 	Type         string    `json:"type"`
 	StartDate    time.Time `json:"start_date"`
 	EndDate      time.Time `json:"end_date"`
 	InterestRate float64   `json:"interest_rate"`
-	StartAmount  float64   `json:"start_amount"`
-	EndAmount    float64   `json:"end_amount"`
+	Amount       int       `json:"amount"`
 	Currency     string    `json:"currency"`
 	Active       bool      `json:"active"`
-	Audit        Audit     `json:"audit"`
+	Audit
 }
