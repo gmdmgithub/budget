@@ -21,6 +21,7 @@ type DB struct {
 type Config struct {
 	AccessToken string
 	HTTPPort    string
+	DBName      string
 	DBS         map[string]DB
 }
 
@@ -43,33 +44,39 @@ func Load() (c *Config) {
 		p = ":8000"
 	}
 	c.HTTPPort = p
+	dn, ok := os.LookupEnv("DB_NAME")
+	if !ok {
+		log.Print("No db name in .env file, default \"budget\" taken")
+		dn = "budget"
+	}
+	c.DBName = dn
 	c.AccessToken = os.Getenv("ACCESS_TOKEN") //no default value for token
 
 	dbm := make(map[string]DB)
 	// set config to all DBS
-	dbm["MONGODB"] = config("MONGODB")
+	dbm["MONGODB"] = *config("MONGODB")
 
 	c.DBS = dbm
 
 	return c
 }
 
-func config(name string) DB {
+func config(name string) *DB {
 
 	var ok bool
 	var d DB
 	d.Host, ok = os.LookupEnv(name + "_HOST")
 	if !ok {
 		log.Print("No DB host in .env file aborted")
-		os.Exit(1)
+		os.Exit(-1)
 	}
 	d.Port, ok = os.LookupEnv(name + "_PORT")
 	if !ok {
 		log.Print("No DB port in .env file aborted")
-		os.Exit(1)
+		os.Exit(-1)
 	}
 	d.User = os.Getenv(name + "_USER")
 	d.Password = os.Getenv(name + "_PASSWORD")
 
-	return d
+	return &d
 }
