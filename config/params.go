@@ -33,8 +33,7 @@ func Load() (c *Config) {
 		log.Printf("Fatal problem during initialization: %v\n", err)
 		os.Exit(1)
 	}
-	// log.Printf("All variables %+v: ", os.Environ())
-
+	// set logger configuarion
 	LoadLog()
 
 	c = &Config{}
@@ -54,29 +53,30 @@ func Load() (c *Config) {
 
 	dbm := make(map[string]DB)
 	// set config to all DBS
-	dbm["MONGODB"] = *config("MONGODB")
+	dbm["MONGODB"] = config("MONGODB")
+	dbm["MYSQL"] = config("MYSQL")
 
 	c.DBS = dbm
 
 	return c
 }
 
-func config(name string) *DB {
+func config(name string) DB {
 
 	var ok bool
 	var d DB
 	d.Host, ok = os.LookupEnv(name + "_HOST")
 	if !ok {
 		log.Print("No DB host in .env file aborted")
-		os.Exit(-1)
+		return d
 	}
 	d.Port, ok = os.LookupEnv(name + "_PORT")
 	if !ok {
 		log.Print("No DB port in .env file aborted")
-		os.Exit(-1)
+		return d
 	}
 	d.User = os.Getenv(name + "_USER")
 	d.Password = os.Getenv(name + "_PASSWORD")
 
-	return &d
+	return d
 }

@@ -2,11 +2,6 @@
 
 ## Quick Start
 
-- Structure of this code is based on:
--- https://itnext.io/beautify-your-golang-project-f795b4b453aa
--- https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091
--
-
 ### create project
 
 ```bash
@@ -28,11 +23,12 @@ $ ./project_name
 go get go.mongodb.org/mongo-driver/mongo
 ```
 
-### Install other dependencies, dotenv for .env file, mux for router
+### Install other dependencies, dotenv for .env file, chi for router
 
 ```bash
 go get github.com/joho/godotenv
 go get -u github.com/rs/zerolog/log
+go get -u github.com/go-chi/chi
 ```
 
 ## Version
