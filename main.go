@@ -10,10 +10,10 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/gmdmgithub/budget/config"
 	"github.com/gmdmgithub/budget/driver"
+	"github.com/gmdmgithub/budget/handler"
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
@@ -56,6 +56,10 @@ func run() error {
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("hi there, home dir"))
 	})
+
+	// Mount the admin sub-router
+	r.Mount("/admin", handler.AdminRouter())
+
 	log.Printf("Service is running on port %s", cfg.HTTPPort)
 	return http.ListenAndServe(cfg.HTTPPort, r)
 
