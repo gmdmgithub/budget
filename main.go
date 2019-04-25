@@ -60,6 +60,9 @@ func run() error {
 	// Mount the admin sub-router
 	r.Mount("/admin", handler.AdminRouter())
 
+	// Mount the admin sub-router
+	r.Mount("/statement", handler.StatementRouter())
+
 	log.Printf("Service is running on port %s", cfg.HTTPPort)
 	return http.ListenAndServe(cfg.HTTPPort, r)
 
