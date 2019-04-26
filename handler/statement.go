@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/go-chi/chi"
 )
 
@@ -12,6 +14,7 @@ import (
 func StatementRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Get("/", allStatements)
+	r.Post("/", createStatement()) // POST /articles - different way (func is returned)
 	r.Route("/{stID}", func(r chi.Router) {
 		r.Use(StatementCtx)
 		r.Get("/", getStatement)       // GET /stat/123
@@ -24,7 +27,7 @@ func StatementRouter() http.Handler {
 	return r
 }
 
-// StatementCtx add Statement to the context
+// StatementCtx add Statement to the context - or any other necessary objects
 func StatementCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		stID := chi.URLParam(r, "stID")
@@ -33,10 +36,19 @@ func StatementCtx(next http.Handler) http.Handler {
 		// 	http.Error(w, http.StatusText(404), 404)
 		// 	return
 		//   }
-		//   ctx := context.WithValue(r.Context(), "article", statement)
+		//   ctx := context.WithValue(r.Context(), "statement", statement)
 		ctx := context.WithValue(r.Context(), "stID", stID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func createStatement() http.HandlerFunc {
+	// DoOnece part
+	log.Printf("Hi there post func prepated")
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("performed create statement")
+		w.Write([]byte(fmt.Sprintf("Create statement!!")))
+	}
 }
 
 func allStatements(w http.ResponseWriter, r *http.Request) {
