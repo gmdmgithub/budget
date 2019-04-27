@@ -43,7 +43,7 @@ func StatementCtx(next http.Handler) http.Handler {
 }
 
 func createStatement() http.HandlerFunc {
-	// DoOnece part
+	// DoOnce part
 	log.Printf("Hi there post func prepated")
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("performed create statement")
