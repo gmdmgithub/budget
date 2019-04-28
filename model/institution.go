@@ -1,4 +1,4 @@
-package models
+package model
 
 // Institution - model for institution like bank, Broker
 type Institution struct {

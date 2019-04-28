@@ -60,7 +60,7 @@ func ConnectMgo(cfg *config.Config) (*DB, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	
+
 	err = client.Connect(ctx)
 	if err != nil {
 		return nil, err

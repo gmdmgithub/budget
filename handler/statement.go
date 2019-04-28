@@ -2,9 +2,12 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/gmdmgithub/budget/model"
 	"github.com/rs/zerolog/log"
 
 	"github.com/go-chi/chi"
@@ -44,10 +47,30 @@ func StatementCtx(next http.Handler) http.Handler {
 
 func createStatement() http.HandlerFunc {
 	// DoOnce part
-	log.Printf("Hi there post func prepated")
+	log.Printf("Hi there post func prepared")
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("performed create statement")
-		w.Write([]byte(fmt.Sprintf("Create statement!!")))
+		defer log.Printf("performed create statement END")
+
+		var stmt model.Statement
+		if err := json.NewDecoder(r.Body).Decode(&stmt); err != nil {
+			log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		stmt.UsrCreated = "1" // temporary 1, should be current user
+		stmt.Created = time.Now()
+
+		// store stmt in DB - next step
+
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("content-type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(stmt); err != nil {
+			log.Printf(" json Problem ... %v\n", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }
 

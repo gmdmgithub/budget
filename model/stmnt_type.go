@@ -1,4 +1,4 @@
-package models
+package model
 
 // StmntType - describes move for statement
 type StmntType struct {
