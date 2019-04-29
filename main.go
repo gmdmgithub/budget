@@ -38,7 +38,11 @@ func run() error {
 		log.Printf("No DB opened %v", err)
 		os.Exit(-1)
 	}
-	log.Printf("DB %+v", db.Mongodb.Name())
+
+	defer func() {
+		db.Mongodb.Client().Disconnect(ctx)
+		log.Print("DB connection end!")
+	}()
 
 	r := chi.NewRouter()
 

@@ -67,12 +67,12 @@ func config(name string) DB {
 	var d DB
 	d.Host, ok = os.LookupEnv(name + "_HOST")
 	if !ok {
-		log.Print("No DB host in .env file aborted")
+		log.Printf("No DB host in .env %s for: ", name+"_HOST")
 		return d
 	}
 	d.Port, ok = os.LookupEnv(name + "_PORT")
 	if !ok {
-		log.Print("No DB port in .env file aborted")
+		log.Printf("No DB port in .env %s for: ", name+"_PORT")
 		return d
 	}
 	d.User = os.Getenv(name + "_USER")
