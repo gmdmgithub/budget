@@ -12,6 +12,7 @@ type User struct {
 	Audit
 }
 
+// OK - check correcteness
 func (u *User) OK() error {
 
 	if u.Login == "" || u.Password == "" || u.Type == "" {
@@ -19,4 +20,10 @@ func (u *User) OK() error {
 	}
 
 	return nil
+}
+
+// ColName - return name of collection in DB
+func (u *User) ColName() string {
+
+	return "users"
 }

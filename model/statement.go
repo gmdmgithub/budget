@@ -31,3 +31,8 @@ func (s *Statement) OK() error {
 
 	return nil
 }
+
+// ColName - return name of collection in DB
+func (s *Statement) ColName() string {
+	return "statements"
+}
