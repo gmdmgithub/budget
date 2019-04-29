@@ -33,7 +33,7 @@ func run() error {
 	cfg := config.Load()
 	log.Printf("config read %+v", cfg)
 
-	db, err := driver.ConnectMgo(cfg)
+	db, err := driver.ConnectMgo(cfg, ctx)
 	if err != nil {
 		log.Printf("No DB opened %v", err)
 		os.Exit(-1)

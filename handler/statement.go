@@ -7,11 +7,15 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gmdmgithub/budget/driver"
 	"github.com/gmdmgithub/budget/model"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/go-chi/chi"
 )
+
+const collName = "statements"
 
 // StatementRouter - a completely separate router for administrator routes
 func StatementRouter() http.Handler {
@@ -49,6 +53,7 @@ func createStatement() http.HandlerFunc {
 	// DoOnce part
 	log.Printf("Hi there post func prepared")
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		log.Printf("performed create statement")
 		defer log.Printf("performed create statement END")
 
@@ -59,10 +64,26 @@ func createStatement() http.HandlerFunc {
 			return
 		}
 
+		if err := stmt.OK(); err != nil {
+			log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		stmt.UsrCreated = "1" // temporary 1, should be current user
 		stmt.Created = time.Now()
 
 		// store stmt in DB - next step
+		log.Printf("DB %v", driver.DBConn.Mongodb.Name())
+		res, err := driver.DBConn.Mongodb.Collection(collName).InsertOne(driver.DBConn.C, stmt)
+
+		if err != nil {
+			log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		stmt.ID = res.InsertedID.(primitive.ObjectID)
 
 		w.WriteHeader(http.StatusOK)
 		w.Header().Set("content-type", "application/json")

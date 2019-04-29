@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 
 	"github.com/gmdmgithub/budget/config"
 	"github.com/rs/zerolog/log"
@@ -17,10 +16,11 @@ import (
 type DB struct {
 	Mongodb *mongo.Database
 	SQL     *sql.DB //if any
+	C       context.Context
 }
 
 // DBConn hold connection to the databases
-var dbConn = &DB{}
+var DBConn = &DB{}
 
 // ConnectSQL - connect to mySQL DB
 func ConnectSQL(host, port, user, pass, name string) (*DB, error) {
@@ -39,12 +39,12 @@ func ConnectSQL(host, port, user, pass, name string) (*DB, error) {
 	if err != nil {
 		panic(err)
 	}
-	dbConn.SQL = d
-	return dbConn, err
+	DBConn.SQL = d
+	return DBConn, err
 }
 
 // ConnectMgo return connection to the mongodb
-func ConnectMgo(cfg *config.Config) (*DB, error) {
+func ConnectMgo(cfg *config.Config, ctx context.Context) (*DB, error) {
 	// mongodb://[username:password@]host[:port][/[database][?options]]
 	//
 	uri := fmt.Sprintf(
@@ -58,8 +58,7 @@ func ConnectMgo(cfg *config.Config) (*DB, error) {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	DBConn.C = ctx
 
 	err = client.Connect(ctx)
 	if err != nil {
@@ -72,7 +71,7 @@ func ConnectMgo(cfg *config.Config) (*DB, error) {
 	}
 
 	log.Print("Connected to the DB!")
-	dbConn.Mongodb = client.Database(cfg.DBName)
+	DBConn.Mongodb = client.Database(cfg.DBName)
 
-	return dbConn, err
+	return DBConn, err
 }
