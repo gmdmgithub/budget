@@ -3,7 +3,6 @@ package driver
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -47,8 +46,9 @@ func ConnectSQL(host, port, user, pass, name string) (*DB, error) {
 	return DBConn, err
 }
 
-// ConnectMgo return connection to the mongodb
-func ConnectMgo(cfg *config.Config, ctx context.Context) (*DB, error) {
+// ConnectMgo - return connection to the mongodb
+func ConnectMgo(ctx context.Context, cfg *config.Config) (*DB, error) {
+
 	// mongodb://[username:password@]host[:port][/[database][?options]]
 	//
 	uri := fmt.Sprintf(
@@ -80,25 +80,19 @@ func ConnectMgo(cfg *config.Config, ctx context.Context) (*DB, error) {
 	return DBConn, err
 }
 
+// Create - InsertOne, general method for model element to avoid repeated code
 func Create(v model.Valid, r *http.Request) (*mongo.InsertOneResult, error) {
 
-	if err := json.NewDecoder(r.Body).Decode(&v); err != nil {
-		log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
-		return nil, err
-	}
-
 	if err := v.OK(); err != nil {
-		log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
+		log.Printf("Problem saving  %T ... %v \n %+v\n", v, err, r.Body)
 		return nil, err
 	}
 	db := DBConn.Mongodb
 
 	// store v in DB - next step
-	log.Printf("DB %v", DBConn.Mongodb.Name())
 	res, err := db.Collection(v.ColName()).InsertOne(DBConn.C, v)
-
 	if err != nil {
-		log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
+		log.Printf("Problem saving %T ... %v \n %+v\n", v, err, r.Body)
 		return nil, err
 	}
 

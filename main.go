@@ -33,7 +33,7 @@ func run() error {
 	cfg := config.Load()
 	log.Printf("config read %+v", cfg)
 
-	db, err := driver.ConnectMgo(cfg, ctx)
+	db, err := driver.ConnectMgo(ctx, cfg)
 	if err != nil {
 		log.Printf("No DB opened %v", err)
 		os.Exit(-1)
@@ -66,6 +66,8 @@ func run() error {
 
 	// Mount the admin sub-router
 	r.Mount("/statement", handler.StatementRouter())
+
+	r.Mount("/user", handler.UserRouter())
 
 	log.Printf("Service is running on port %s", cfg.HTTPPort)
 	return http.ListenAndServe(cfg.HTTPPort, r)

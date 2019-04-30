@@ -22,8 +22,8 @@ func StatementRouter() http.Handler {
 	r.Post("/", createStatement()) // POST /articles - different way (func is returned)
 	r.Route("/{stID}", func(r chi.Router) {
 		r.Use(StatementCtx)
-		r.Get("/", getStatement)       // GET /stat/123
-		r.Put("/", updateStatement)    // PUT /stat/123
+		r.Get("/", getStatement)       // GET /statement/123
+		r.Put("/", updateStatement)    // PUT /statement/123
 		r.Delete("/", deleteStatement) // DELETE /statement/123
 		// Regexp url parameters:
 		r.Get("/{name:[a-z-]+}", allStatements) // GET /statement/income from ABC
@@ -56,6 +56,13 @@ func createStatement() http.HandlerFunc {
 		defer log.Printf("performed create statement END")
 
 		var stmt model.Statement
+
+		if err := json.NewDecoder(r.Body).Decode(&stmt); err != nil {
+			log.Printf("Problem saving User ... %v \n %+v\n", err, r.Body)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
 		stmt.UsrCreated = "1" // temporary 1, should be current user
 		stmt.Created = time.Now()
 
@@ -67,29 +74,6 @@ func createStatement() http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		// if err := json.NewDecoder(r.Body).Decode(&stmt); err != nil {
-		// 	log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
-
-		// if err := stmt.OK(); err != nil {
-		// 	log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
-		// db := driver.DBConn.Mongodb
-
-		// // store stmt in DB - next step
-		// log.Printf("DB %v", driver.DBConn.Mongodb.Name())
-		// res, err := db.Collection(stmt.ColName()).InsertOne(driver.DBConn.C, stmt)
-
-		// if err != nil {
-		// 	log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
-		// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-		// 	return
-		// }
 
 		stmt.ID = res.InsertedID.(primitive.ObjectID)
 
