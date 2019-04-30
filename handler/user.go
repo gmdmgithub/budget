@@ -53,7 +53,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 	var v model.Valid = &usr
 
-	res, err := driver.Create(v, r)
+	res, err := driver.Create(v)
 	if err != nil {
 		log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

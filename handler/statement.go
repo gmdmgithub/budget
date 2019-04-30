@@ -36,13 +36,15 @@ func StatementRouter() http.Handler {
 func StatementCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		stID := chi.URLParam(r, "stID")
-		//   statement, err := dbGetStatement(stID)
-		//   if err != nil {
-		// 	http.Error(w, http.StatusText(404), 404)
-		// 	return
-		//   }
-		//   ctx := context.WithValue(r.Context(), "statement", statement)
-		ctx := context.WithValue(r.Context(), "stID", stID)
+		var stmt model.Statement
+		var v model.Valid = &stmt
+		err := driver.GetOne(v, stID)
+		if err != nil {
+			http.Error(w, http.StatusText(404), 404)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "statement", &stmt)
+		log.Printf("Data from DB: %+v with ID: %v", stmt, stID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -68,7 +70,7 @@ func createStatement() http.HandlerFunc {
 
 		var v model.Valid = &stmt
 
-		res, err := driver.Create(v, r)
+		res, err := driver.Create(v)
 		if err != nil {
 			log.Printf("Problem saving Statement ... %v \n %+v\n", err, r.Body)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -93,13 +95,23 @@ func allStatements(w http.ResponseWriter, r *http.Request) {
 
 func getStatement(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	// statement, ok := ctx.Value("statement").(*models.Statement)
-	statement, ok := ctx.Value("stID").(string)
+	// check the type
+	// log.Printf("what type? %T and values %+v", ctx.Value("statement"), ctx.Value("statement"))
+	statement, ok := ctx.Value("statement").(*model.Statement)
+	// statement, ok := ctx.Value("stID").(string)
 	if !ok {
+		log.Print("problem with statement")
 		http.Error(w, http.StatusText(422), 422)
 		return
 	}
-	w.Write([]byte(fmt.Sprintf("Specific statement %+v", statement)))
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("content-type", "application/json")
+
+	// w.Write([]byte(fmt.Sprintf("Specific statement %+v", statement)))
+	if err := json.NewEncoder(w).Encode(statement); err != nil {
+		log.Printf(" json Problem ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 
 }
 func updateStatement(w http.ResponseWriter, r *http.Request) {
