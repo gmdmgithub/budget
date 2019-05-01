@@ -96,22 +96,13 @@ func GetOne(m model.Modeler, ID string, filter bson.M) error {
 	return nil
 }
 
-func DeleteOne(m model.Modeler, ID string) (*mongo.DeleteResult, error) {
+func DeleteOne(m model.Modeler, ID primitive.ObjectID) (*mongo.DeleteResult, error) {
 
 	db := DBConn.Mongodb
 
-	_id, err := primitive.ObjectIDFromHex(ID)
-	if err != nil {
-		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
-		return nil, err
-	}
-
-	log.Printf("Delete object %T with ID: %v", m, _id)
-
-	filter := bson.M{"_id": _id}
+	filter := bson.M{"_id": ID}
 	// filter := bson.D{primitive.E{Key: "_id", Value: id}} //- another way to set filter with ID
-	var del *mongo.DeleteResult
-	del, err = db.Collection(m.ColName()).DeleteOne(DBConn.C, filter)
+	del, err := db.Collection(m.ColName()).DeleteOne(DBConn.C, filter)
 	if err != nil {
 		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
 		return nil, err

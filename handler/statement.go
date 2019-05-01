@@ -119,5 +119,31 @@ func updateStatement(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("Update statement?")))
 }
 func deleteStatement(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(fmt.Sprintf("Delete statement?")))
+
+	ctx := r.Context()
+	// check the type
+	// log.Printf("what type? %T and values %+v", ctx.Value("statement"), ctx.Value("statement"))
+	statement, ok := ctx.Value("statement").(*model.Statement)
+	// statement, ok := ctx.Value("stID").(string)
+	if !ok {
+		log.Print("problem with statement")
+		http.Error(w, http.StatusText(422), 422)
+		return
+	}
+
+	var m model.Modeler = statement
+
+	res, err := driver.DeleteOne(m, statement.ID)
+	if err != nil {
+		log.Printf("Problem delete Statement ... %v \n %+v\n", err, r.Body)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// log.Printf("del result %s", res.DeletedCount)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf(" json Problem ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	// w.Write([]byte(fmt.Sprintf("Delete statement")))
 }
