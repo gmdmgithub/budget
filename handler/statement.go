@@ -115,8 +115,44 @@ func getStatement(w http.ResponseWriter, r *http.Request) {
 
 }
 func updateStatement(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	// check the type
+	statement, ok := ctx.Value("statement").(*model.Statement)
+	if !ok {
+		log.Print("problem with statement")
+		http.Error(w, http.StatusText(422), 422)
+		return
+	}
 
-	w.Write([]byte(fmt.Sprintf("Update statement?")))
+	// first we read from DB but finally should be this from body
+	var stmt model.Statement
+	if err := json.NewDecoder(r.Body).Decode(&stmt); err != nil {
+		log.Printf("Problem saving User ... %v \n %+v\n", err, r.Body)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	stmt.ID = statement.ID
+	stmt.Created = statement.Created
+	stmt.UsrCreated = statement.UsrCreated
+	stmt.Updated = time.Now()
+	stmt.UsrUpdated = "1" //correct in the future
+
+	var m model.Modeler = &stmt
+	res, err := driver.UpdateOne(m, stmt.ID)
+
+	if err != nil {
+		log.Printf("Problem update Statement ... %v \n %+v\n", err, r.Body)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("content-type", "application/json")
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf(" json Problem update ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// w.Write([]byte(fmt.Sprintf("Update statement?")))
 }
 func deleteStatement(w http.ResponseWriter, r *http.Request) {
 

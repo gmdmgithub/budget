@@ -110,3 +110,20 @@ func DeleteOne(m model.Modeler, ID primitive.ObjectID) (*mongo.DeleteResult, err
 
 	return del, nil
 }
+
+// UpdateOne - update document - all fields
+func UpdateOne(m model.Modeler, ID primitive.ObjectID) (*mongo.UpdateResult, error) {
+
+	db := DBConn.Mongodb
+
+	filter := bson.M{"_id": ID}
+	// update document
+	update := bson.D{primitive.E{Key: "$set", Value: m}}
+	res, err := db.Collection(m.ColName()).UpdateOne(DBConn.C, filter, update)
+	if err != nil {
+		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
+		return nil, err
+	}
+
+	return res, nil
+}
