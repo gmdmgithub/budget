@@ -68,6 +68,8 @@ func run() error {
 	r.Mount("/statement", handler.StatementRouter())
 	r.Mount("/user", handler.UserRouter())
 	r.Mount("/institution", handler.InstitutionRouter())
+	r.Mount("/expense", handler.ExpensesRouter())
+	r.Mount("/currency", handler.CurrencyRouter())
 
 	log.Printf("Service is running on port %s", cfg.HTTPPort)
 	return http.ListenAndServe(cfg.HTTPPort, r)
