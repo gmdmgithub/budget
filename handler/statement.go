@@ -21,7 +21,7 @@ func StatementRouter() http.Handler {
 	r.Get("/", allStatements)
 	r.Post("/", createStatement()) // POST /articles - different way (func is returned)
 	r.Route("/{stID}", func(r chi.Router) {
-		r.Use(StatementCtx)
+		r.Use(statementCtx)
 		r.Get("/", getStatement)       // GET /statement/123
 		r.Put("/", updateStatement)    // PUT /statement/123
 		r.Delete("/", deleteStatement) // DELETE /statement/123
@@ -32,8 +32,8 @@ func StatementRouter() http.Handler {
 	return r
 }
 
-// StatementCtx add Statement to the context - or any other necessary objects
-func StatementCtx(next http.Handler) http.Handler {
+// statementCtx add Statement to the context - or any other necessary objects
+func statementCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		stID := chi.URLParam(r, "stID")
 		var stmt model.Statement
