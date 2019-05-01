@@ -38,7 +38,7 @@ func statementCtx(next http.Handler) http.Handler {
 		stID := chi.URLParam(r, "stID")
 		var stmt model.Statement
 		var v model.Modeler = &stmt
-		err := driver.GetOne(v, stID)
+		err := driver.DoOne(v, stID, driver.GetOne)
 		if err != nil {
 			http.Error(w, http.StatusText(404), 404)
 			return

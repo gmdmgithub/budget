@@ -42,7 +42,7 @@ func usrContext(next http.Handler) http.Handler {
 		var usr model.User
 		var v model.Modeler = &usr
 
-		err := driver.GetOne(v, usrID)
+		err := driver.DoOne(v, usrID, driver.GetOne)
 		if err != nil {
 			http.Error(w, http.StatusText(404), 404)
 			return

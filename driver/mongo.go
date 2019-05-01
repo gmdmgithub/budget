@@ -68,10 +68,7 @@ func Create(m model.Modeler) (*mongo.InsertOneResult, error) {
 	return res, nil
 }
 
-// GetOne - gets one element of specific ID from collection named from struct
-func GetOne(m model.Modeler, ID string) error {
-
-	db := DBConn.Mongodb
+func DoOne(m model.Modeler, ID string, next func(m model.Modeler, ID string, filter bson.M) error) error {
 
 	_id, err := primitive.ObjectIDFromHex(ID)
 	if err != nil {
@@ -82,10 +79,43 @@ func GetOne(m model.Modeler, ID string) error {
 	log.Printf("Getting object %T with ID: %v", m, _id)
 
 	filter := bson.M{"_id": _id}
-	err = db.Collection(m.ColName()).FindOne(DBConn.C, filter).Decode(m)
+
+	return next(m, ID, filter)
+
+}
+
+// GetOne - gets one element of specific ID from collection named from struct
+func GetOne(m model.Modeler, ID string, filter bson.M) error {
+
+	db := DBConn.Mongodb
+	err := db.Collection(m.ColName()).FindOne(DBConn.C, filter).Decode(m)
 	if err != nil {
 		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
 		return err
 	}
 	return nil
+}
+
+func DeleteOne(m model.Modeler, ID string) (*mongo.DeleteResult, error) {
+
+	db := DBConn.Mongodb
+
+	_id, err := primitive.ObjectIDFromHex(ID)
+	if err != nil {
+		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
+		return nil, err
+	}
+
+	log.Printf("Delete object %T with ID: %v", m, _id)
+
+	filter := bson.M{"_id": _id}
+	// filter := bson.D{primitive.E{Key: "_id", Value: id}} //- another way to set filter with ID
+	var del *mongo.DeleteResult
+	del, err = db.Collection(m.ColName()).DeleteOne(DBConn.C, filter)
+	if err != nil {
+		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
+		return nil, err
+	}
+
+	return del, nil
 }
