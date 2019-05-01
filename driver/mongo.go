@@ -127,3 +127,34 @@ func UpdateOne(m model.Modeler, ID primitive.ObjectID) (*mongo.UpdateResult, err
 
 	return res, nil
 }
+
+func GetAllStatements() ([]model.Statement, error) {
+
+	db := DBConn.Mongodb
+	cursor, err := db.Collection("statements").Find(DBConn.C, bson.D{})
+	if err != nil {
+		log.Printf("GetAllStatements error: %+v", err.Error())
+		return nil, err
+	}
+	defer cursor.Close(DBConn.C)
+
+	// iterate through all documents
+	var ms []model.Statement
+	for cursor.Next(DBConn.C) {
+		var m model.Statement
+		// decode the document
+		if err := cursor.Decode(m); err != nil {
+			log.Printf("GetAllStatements error: %+v", err.Error())
+			return nil, err
+		}
+		fmt.Printf("model: %+v", m)
+		ms = append(ms, m)
+	}
+	// check if the cursor encountered any errors while iterating
+	if err := cursor.Err(); err != nil {
+		log.Printf("GetAllStatements error: %+v", err.Error())
+		return nil, err
+	}
+
+	return ms, nil
+}

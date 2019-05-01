@@ -134,7 +134,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	usr.GeneratePassword()
+	usr.GeneratePassword(false)
 	usr.Created = time.Now()
 	usr.UsrCreated = "1"
 
@@ -182,7 +182,60 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("PUT User here"))
+
+	ctx := r.Context()
+
+	dbUsr, ok := ctx.Value("user").(*model.User)
+	if !ok {
+		log.Printf("Problem with user context... ")
+		http.Error(w, http.StatusText(422), 422)
+		return
+	}
+
+	// take user from body - this is important
+
+	var user model.User
+
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		log.Printf("Problem with user context... ")
+		http.Error(w, http.StatusText(422), 422)
+		return
+	}
+
+	user.ID = dbUsr.ID
+	user.Password = dbUsr.Password
+	user.Created = dbUsr.Created
+	user.UsrCreated = dbUsr.UsrCreated
+	user.Updated = time.Now()
+	user.UsrUpdated = "2" //correct in the future
+
+	// update only with passward and login cannot be change
+	user.Login = dbUsr.Login
+	// first chcek if old passwod is the same as stored in DB
+	if !dbUsr.ComparePassword([]byte(user.OldPassword)) {
+		log.Printf("All password does not matches the old one ... %v ", r.Body)
+		http.Error(w, "Old password problem", http.StatusNotAcceptable)
+		return
+	}
+	// now plain password may be replaced
+	user.GeneratePassword(true)
+
+	var m model.Modeler = &user
+	res, err := driver.UpdateOne(m, user.ID)
+
+	if err != nil {
+		log.Printf("Problem update User ... %v \n %+v\n", err, r.Body)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("content-type", "application/json")
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf(" json Problem update ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// w.Write([]byte("PUT User here"))
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {

@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -90,7 +89,22 @@ func createStatement() http.HandlerFunc {
 }
 
 func allStatements(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(fmt.Sprintf("All statements here!")))
+
+	w.Header().Set("content-type", "application/json")
+
+	stmts, err := driver.GetAllStatements()
+	if err != nil {
+		log.Printf("allStatements problem ... %+v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(stmts); err != nil {
+		log.Printf(" json Problem ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// w.Write([]byte(fmt.Sprintf("All statements here!")))
 }
 
 func getStatement(w http.ResponseWriter, r *http.Request) {
