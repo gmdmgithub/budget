@@ -40,7 +40,7 @@ func adminListAccounts(w http.ResponseWriter, r *http.Request) {
 func AdminOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		perm, ok := ctx.Value("acl.permission").(PermissionType)
+		perm, ok := ctx.Value("permission").(PermissionType)
 		if !ok || !perm.IsAdmin() {
 			http.Error(w, http.StatusText(403), 403)
 			return
