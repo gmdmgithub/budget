@@ -139,7 +139,8 @@ func deleteStatement(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("content-type", "application/json")
 	// log.Printf("del result %s", res.DeletedCount)
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Printf(" json Problem ... %v\n", err)

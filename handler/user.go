@@ -186,5 +186,29 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Delete user here"))
+
+	ctx := r.Context()
+
+	usr, ok := ctx.Value("user").(*model.User)
+	if !ok {
+		log.Printf("Problem with user context... ")
+		http.Error(w, http.StatusText(422), 422)
+		return
+	}
+	var m model.Modeler = usr
+	res, err := driver.DeleteOne(m, usr.ID)
+	if err != nil {
+		log.Printf(" delete Problem ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusPreconditionFailed)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("content-type", "application/json")
+
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf(" json Problem ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusUnsupportedMediaType)
+	}
+
+	// w.Write([]byte("Delete user here"))
 }
