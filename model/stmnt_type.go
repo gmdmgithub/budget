@@ -20,6 +20,8 @@ func (s *StmntType) OK() error {
 	if s.Name == "" || s.Code == "" {
 		return errors.New("Fill in all required fields")
 	}
+
+	return nil
 }
 
 func (s *StmntType) ColName() string {

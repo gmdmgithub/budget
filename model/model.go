@@ -1,7 +1,7 @@
 package model
 
-// Valid - interface for checking corectness of model objects
-type Valid interface {
+// Modeler - interface for gathering of model objects
+type Modeler interface {
 	OK() error
 	ColName() string
 }

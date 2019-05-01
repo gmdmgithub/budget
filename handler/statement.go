@@ -37,7 +37,7 @@ func StatementCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		stID := chi.URLParam(r, "stID")
 		var stmt model.Statement
-		var v model.Valid = &stmt
+		var v model.Modeler = &stmt
 		err := driver.GetOne(v, stID)
 		if err != nil {
 			http.Error(w, http.StatusText(404), 404)
@@ -68,7 +68,7 @@ func createStatement() http.HandlerFunc {
 		stmt.UsrCreated = "1" // temporary 1, should be current user
 		stmt.Created = time.Now()
 
-		var v model.Valid = &stmt
+		var v model.Modeler = &stmt
 
 		res, err := driver.Create(v)
 		if err != nil {

@@ -24,8 +24,6 @@ func (c *Currency) OK() error {
 	return nil
 }
 
-func (c *Currency) ColName() string{
+func (c *Currency) ColName() string {
 	return "currencies"
 }
-
-func 

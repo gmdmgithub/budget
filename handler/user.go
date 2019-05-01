@@ -40,7 +40,7 @@ func usrContext(next http.Handler) http.Handler {
 		usrID := chi.URLParam(r, "usrID")
 
 		var usr model.User
-		var v model.Valid = &usr
+		var v model.Modeler = &usr
 
 		err := driver.GetOne(v, usrID)
 		if err != nil {
@@ -138,7 +138,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	usr.Created = time.Now()
 	usr.UsrCreated = "1"
 
-	var v model.Valid = &usr
+	var v model.Modeler = &usr
 
 	res, err := driver.Create(v)
 	if err != nil {

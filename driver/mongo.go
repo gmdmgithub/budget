@@ -50,18 +50,18 @@ func ConnectMgo(ctx context.Context, cfg *config.Config) (*DB, error) {
 }
 
 // Create - InsertOne, general method for model element to avoid repeated code
-func Create(v model.Valid) (*mongo.InsertOneResult, error) {
+func Create(m model.Modeler) (*mongo.InsertOneResult, error) {
 
-	if err := v.OK(); err != nil {
-		log.Printf("Problem saving  %T ... %+v", v, err)
+	if err := m.OK(); err != nil {
+		log.Printf("Problem saving  %T ... %+v", m, err)
 		return nil, err
 	}
 	db := DBConn.Mongodb
 
 	// store v in DB - next step
-	res, err := db.Collection(v.ColName()).InsertOne(DBConn.C, v)
+	res, err := db.Collection(m.ColName()).InsertOne(DBConn.C, m)
 	if err != nil {
-		log.Printf("Problem saving %T ... %+v", v, err)
+		log.Printf("Problem saving %T ... %+v", m, err)
 		return nil, err
 	}
 
@@ -69,22 +69,22 @@ func Create(v model.Valid) (*mongo.InsertOneResult, error) {
 }
 
 // GetOne - gets one element of specific ID from collection named from struct
-func GetOne(v model.Valid, ID string) error {
+func GetOne(m model.Modeler, ID string) error {
 
 	db := DBConn.Mongodb
 
 	_id, err := primitive.ObjectIDFromHex(ID)
 	if err != nil {
-		log.Printf("Object %T with ID: %s and error: %v", v, ID, err.Error())
+		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
 		return err
 	}
 
-	log.Printf("Getting object %T with ID: %v", v, _id)
+	log.Printf("Getting object %T with ID: %v", m, _id)
 
 	filter := bson.M{"_id": _id}
-	err = db.Collection(v.ColName()).FindOne(DBConn.C, filter).Decode(v)
+	err = db.Collection(m.ColName()).FindOne(DBConn.C, filter).Decode(m)
 	if err != nil {
-		log.Printf("Object %T with ID: %s and error: %v", v, ID, err.Error())
+		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
 		return err
 	}
 	return nil
