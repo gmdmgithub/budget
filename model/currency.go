@@ -9,11 +9,11 @@ import (
 
 // Currency - represents exchange currency
 type Currency struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty"`
-	Code         string             `bson:"code,omitempty"`
-	ExchangeRate float64            `bson:"exchange_rate,omitempty"`
-	Date         time.Time          `bson:"date,omitempty"`
-	Base         bool               `bson:"base,omitempty"`
+	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Code         string             `json:"code" bson:"code"`
+	ExchangeRate float64            `json:"exchange_rate" bson:"exchange_rate"`
+	Date         time.Time          `json:"date" bson:"date"` //"date": "2019-05-01T00:00:00Z" - for Postman
+	Base         bool               `json:"base" bson:"base"`
 }
 
 func (c *Currency) OK() error {

@@ -36,6 +36,8 @@ func createCurrency(w http.ResponseWriter, r *http.Request) {
 
 	var m model.Modeler = &cur
 
+	log.Printf("Let's see the model %+v", m)
+
 	res, err := driver.Create(m)
 	if err != nil {
 		log.Printf("Saving problem %v", err)

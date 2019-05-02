@@ -9,17 +9,17 @@ import (
 
 // Statement - model for db object that hold investments and loans
 type Statement struct {
-	ID           primitive.ObjectID `bson:"_id,omitempty"`
-	Name         string             `bson:"name"`
-	Comment      string             `bson:"comment"`
-	InstCode     string             `bson:"inst_code"`
-	TypeCode     string             `bson:"type_code"`
-	StartDate    time.Time          `bson:"start_date"`
-	EndDate      time.Time          `bson:"end_date,omitempty"`
-	InterestRate float64            `bson:"interest_rate"`
-	Amount       int                `bson:"amount"`
-	CurrencyCode string             `bson:"currency_code"`
-	Active       bool               `bson:"active"`
+	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Name         string             `json:"name" bson:"name"`
+	Comment      string             `json:"comment,omitempty" bson:"comment,omitempty"`
+	InstCode     string             `json:"inst_code" bson:"inst_code"`
+	TypeCode     string             `json:"type_code" bson:"type_code"`
+	StartDate    time.Time          `json:"start_date" bson:"start_date"`
+	EndDate      time.Time          `json:"end_date,omitempty" bson:"end_date,omitempty"`
+	InterestRate float64            `json:"interest_rate" bson:"interest_rate"`
+	Amount       int                `json:"amount" bson:"amount"`
+	CurrencyCode string             `json:"currency_code" bson:"currency_code"`
+	Active       bool               `json:"active" bson:"active"`
 	Audit
 }
 

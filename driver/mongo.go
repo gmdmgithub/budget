@@ -48,7 +48,7 @@ func ConnectMgo(ctx context.Context, cfg *config.Config, db *DB) error {
 func Create(m model.Modeler) (*mongo.InsertOneResult, error) {
 
 	if err := m.OK(); err != nil {
-		log.Printf("Problem saving  %T ... %+v", m, err)
+		log.Printf("Problem saving %T ... %+v", m, err)
 		return nil, err
 	}
 	db := DBConn.Mongodb
