@@ -32,8 +32,9 @@ func run() error {
 
 	cfg := config.Load()
 	log.Printf("config read %+v", cfg)
+	db := driver.DB{}
 
-	db, err := driver.ConnectMgo(ctx, cfg)
+	err := driver.ConnectMgo(ctx, cfg, &db)
 	if err != nil {
 		log.Printf("No DB opened %v", err)
 		os.Exit(-1)
@@ -43,6 +44,8 @@ func run() error {
 		db.Mongodb.Client().Disconnect(ctx)
 		log.Print("DB connection end!")
 	}()
+
+	driver.DBConn = &db
 
 	r := chi.NewRouter()
 

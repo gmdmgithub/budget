@@ -6,7 +6,7 @@ import (
 )
 
 // ConnectSQL - connect to mySQL DB
-func ConnectSQL(host, port, user, pass, name string) (*DB, error) {
+func ConnectSQL(host, port, user, pass, name string, db *DB) error {
 
 	//  username:password@protocol(address)/dbname?param=value
 	// https://github.com/go-sql-driver/mysql
@@ -18,10 +18,10 @@ func ConnectSQL(host, port, user, pass, name string) (*DB, error) {
 		port,
 		name,
 	)
-	d, err := sql.Open("mysql", dbSource)
+	var err error
+	db.SQL, err = sql.Open("mysql", dbSource)
 	if err != nil {
 		panic(err)
 	}
-	DBConn.SQL = d
-	return DBConn, err
+	return err
 }

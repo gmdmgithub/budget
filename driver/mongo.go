@@ -16,7 +16,7 @@ import (
 )
 
 // ConnectMgo - return connection to the mongodb
-func ConnectMgo(ctx context.Context, cfg *config.Config) (*DB, error) {
+func ConnectMgo(ctx context.Context, cfg *config.Config, db *DB) error {
 
 	// mongodb://[username:password@]host[:port][/[database][?options]]
 	//
@@ -26,27 +26,22 @@ func ConnectMgo(ctx context.Context, cfg *config.Config) (*DB, error) {
 		cfg.DBS["MONGODB"].Port,
 	)
 
-	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
-	if err != nil {
-		return nil, err
-	}
+	client, err := mongo.Connect(
+		ctx,
+		options.Client().ApplyURI(uri),
+	)
 
-	DBConn.C = ctx
-
-	err = client.Connect(ctx)
-	if err != nil {
-		return nil, err
-	}
+	db.C = ctx
 
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	log.Print("Connected to the DB!")
-	DBConn.Mongodb = client.Database(cfg.DBName)
+	db.Mongodb = client.Database(cfg.DBName)
 
-	return DBConn, err
+	return nil
 }
 
 // Create - InsertOne, general method for model element to avoid repeated code
@@ -143,11 +138,11 @@ func GetAllStatements() ([]model.Statement, error) {
 	for cursor.Next(DBConn.C) {
 		var m model.Statement
 		// decode the document
-		if err := cursor.Decode(m); err != nil {
+		if err := cursor.Decode(&m); err != nil {
 			log.Printf("GetAllStatements error: %+v", err.Error())
 			return nil, err
 		}
-		fmt.Printf("model: %+v", m)
+		// fmt.Printf("model: %+v", m)
 		ms = append(ms, m)
 	}
 	// check if the cursor encountered any errors while iterating
@@ -157,4 +152,38 @@ func GetAllStatements() ([]model.Statement, error) {
 	}
 
 	return ms, nil
+}
+
+func GetAllCurrencies() ([]model.Currency, error) {
+
+	db := DBConn.Mongodb
+	// opts := options.Find()
+	ctx := context.Background()
+	cursor, err := db.Collection("currencies").Find(ctx, bson.D{})
+	if err != nil {
+		log.Printf("Start and GetAllCurrencies error: %+v", err.Error())
+		return nil, err
+	}
+
+	defer cursor.Close(ctx)
+
+	// iterate through all documents
+	var mc []model.Currency
+	for cursor.Next(ctx) {
+		var m model.Currency
+		// decode the document
+		if err := cursor.Decode(&m); err != nil {
+			log.Printf("Problem with next - GetAllCurrencies error: %+v", err.Error())
+			return nil, err
+		}
+		// fmt.Printf("model: %+v", m)
+		mc = append(mc, m)
+	}
+	// check if the cursor encountered any errors while iterating
+	if err := cursor.Err(); err != nil {
+		log.Printf("GetAllCurrencies error: %+v", err.Error())
+		return nil, err
+	}
+
+	return mc, nil
 }

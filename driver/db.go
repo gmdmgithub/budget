@@ -15,4 +15,4 @@ type DB struct {
 }
 
 // DBConn hold connection to the databases
-var DBConn = &DB{}
+var DBConn *DB
