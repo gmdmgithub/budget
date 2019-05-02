@@ -18,7 +18,9 @@ import (
 func StatementRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Get("/", allStatements)
-	r.Post("/", createStatement()) // POST /articles - different way (func is returned)
+	r.Post("/", createStatement())     // POST /articles - different way (func is returned)
+	r.Get("/range", rangeStatements)   // GET /statement/data from date to
+	r.Get("/ondate", onDateStatements) // GET /statement/data from date to
 	r.Route("/{stID}", func(r chi.Router) {
 		r.Use(statementCtx)
 		r.Get("/", getStatement)       // GET /statement/123
@@ -26,6 +28,7 @@ func StatementRouter() http.Handler {
 		r.Delete("/", deleteStatement) // DELETE /statement/123
 		// Regexp url parameters:
 		r.Get("/{name:[a-z-]+}", allStatements) // GET /statement/income from ABC
+
 	})
 
 	return r
@@ -88,9 +91,36 @@ func createStatement() http.HandlerFunc {
 	}
 }
 
-func allStatements(w http.ResponseWriter, r *http.Request) {
+func rangeStatements(w http.ResponseWriter, r *http.Request) {
 
+	res, err := driver.StatementsRange(r.URL.Query())
+	if err != nil {
+		log.Printf("Problem with getting range res %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("content-type", "application/json")
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf(" json Problem ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func onDateStatements(w http.ResponseWriter, r *http.Request) {
+	res, err := driver.StatementsOnDate(r.URL.Query())
+	if err != nil {
+		log.Printf("Problem with getting range res %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("content-type", "application/json")
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf(" json Problem ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func allStatements(w http.ResponseWriter, r *http.Request) {
 
 	stmts, err := driver.GetAllStatements()
 	if err != nil {
@@ -98,7 +128,7 @@ func allStatements(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
+	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(stmts); err != nil {
 		log.Printf(" json Problem ... %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
