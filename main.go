@@ -60,7 +60,7 @@ func run() error {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) { //simple way
 		w.Write([]byte("hi there, home dir"))
 	})
 

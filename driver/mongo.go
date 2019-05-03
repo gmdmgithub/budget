@@ -65,7 +65,7 @@ func Create(m model.Modeler) (*mongo.InsertOneResult, error) {
 	return res, nil
 }
 
-func DoOne(m model.Modeler, ID string, next func(m model.Modeler, ID string, filter bson.M) error) error {
+func DoOne(m model.Modeler, ID string, next func(m model.Modeler, filter bson.M, options *options.FindOneOptions) error) error {
 
 	_id, err := primitive.ObjectIDFromHex(ID)
 	if err != nil {
@@ -76,18 +76,19 @@ func DoOne(m model.Modeler, ID string, next func(m model.Modeler, ID string, fil
 	log.Printf("Getting object %T with ID: %v", m, _id)
 
 	filter := bson.M{"_id": _id}
+	opts := options.FindOne()
 
-	return next(m, ID, filter)
+	return next(m, filter, opts)
 
 }
 
 // GetOne - gets one element of specific ID from collection named from struct
-func GetOne(m model.Modeler, ID string, filter bson.M) error {
+func GetOne(m model.Modeler, filter bson.M, options *options.FindOneOptions) error {
 
 	db := DBConn.Mongodb
-	err := db.Collection(m.ColName()).FindOne(DBConn.C, filter).Decode(m)
+	err := db.Collection(m.ColName()).FindOne(DBConn.C, filter, options).Decode(m)
 	if err != nil {
-		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
+		log.Printf("Object %T and error: %v", m, err.Error())
 		return err
 	}
 	return nil
@@ -230,12 +231,12 @@ func StatementsRange(r url.Values) ([]model.Statement, error) {
 
 }
 
-func GetAllCurrencies() ([]model.Currency, error) {
+func GetCurrencies(filter bson.M, options *options.FindOptions) ([]model.Currency, error) {
 
 	db := DBConn.Mongodb
 	// opts := options.Find()
 	ctx := context.Background()
-	cursor, err := db.Collection("currencies").Find(ctx, bson.D{})
+	cursor, err := db.Collection("currencies").Find(ctx, filter, options)
 	if err != nil {
 		log.Printf("Start and GetAllCurrencies error: %+v", err.Error())
 		return nil, err
