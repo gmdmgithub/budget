@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -15,10 +16,21 @@ import (
 	"github.com/go-chi/chi"
 )
 
+var cL []string
+
+type checkTime struct {
+	time  time.Time
+	valid bool // Valid is true if Time is not NULL
+}
+
+var cT = checkTime{
+	valid: false,
+}
+
 // CurrencyRouter - group all routes for currency model
 func CurrencyRouter() http.Handler {
 	r := chi.NewRouter()
-
+	r.Use(currencyCxt)
 	r.Get("/", currencies)
 	r.Post("/", createCurrency) //create one currency
 	r.Route("/{curCode}", func(r chi.Router) {
@@ -27,6 +39,31 @@ func CurrencyRouter() http.Handler {
 	})
 
 	return r
+}
+
+func currencyCxt(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		//at least once a day check what currencies are stored
+		if !cT.valid {
+			cT.time = time.Now()
+		}
+		if time.Since(cT.time) > (24*time.Hour) || !cT.valid {
+			cT.time = time.Now()
+			cT.valid = true
+			res, err := driver.Distinct("currencies", "code")
+			if err != nil {
+				log.Printf("Problem with currency codes %v", err)
+			}
+			if len(res) > 0 {
+				cL = nil
+			}
+			for _, c := range res {
+				cL = append(cL, fmt.Sprintf("%s", c))
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func createCurrency(w http.ResponseWriter, r *http.Request) {
