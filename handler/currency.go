@@ -121,11 +121,22 @@ func currencyDate(w http.ResponseWriter, r *http.Request) {
 	// fmt.Fprintf(w, "Hi there - purposefully instead of w.Write([]byte(\"Hi there currency for one date here\"))")
 }
 
+// currencies - get list of all or lats
 func currencies(w http.ResponseWriter, r *http.Request) {
 
 	opt := options.Find()
 
-	cur, err := driver.GetCurrencies(bson.M{}, opt)
+	filter := bson.M{}
+
+	recent := r.URL.Query().Get("recent")
+	log.Printf("give me recent %v", recent)
+	if recent == "true" {
+		// TODO build filter for the last exchange rate for each currency
+		log.Printf("Recent is true %v", recent)
+		// filter
+	}
+
+	cur, err := driver.GetCurrencies(filter, opt)
 	if err != nil {
 		log.Printf("Problem with get currencies %v", cur)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
