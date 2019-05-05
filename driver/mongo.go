@@ -2,9 +2,7 @@ package driver
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"reflect"
 
 	"github.com/gmdmgithub/budget/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -65,6 +63,7 @@ func Create(m model.Modeler) (*mongo.InsertOneResult, error) {
 	return res, nil
 }
 
+// DoOne - helping function to DRY code
 func DoOne(m model.Modeler, ID string, next func(m model.Modeler, filter bson.M, options *options.FindOneOptions) error) error {
 
 	_id, err := primitive.ObjectIDFromHex(ID)
@@ -94,6 +93,7 @@ func GetOne(m model.Modeler, filter bson.M, options *options.FindOneOptions) err
 	return nil
 }
 
+// DeleteOne - delete one element form Modeler interface
 func DeleteOne(m model.Modeler, ID primitive.ObjectID) (*mongo.DeleteResult, error) {
 
 	db := DBConn.Mongodb
@@ -134,7 +134,7 @@ func GetList(filter bson.M, options *options.FindOptions, m model.Modeler) (res 
 	defer cursor.Close(DBConn.C)
 
 	if err != nil {
-		log.Printf("Start and GetAllCurrencies error: %+v, type %T", err.Error(), m)
+		log.Printf("Start and GetList error: %+v, type %T", err.Error(), m)
 		return nil, err
 	}
 
@@ -156,21 +156,6 @@ func GetList(filter bson.M, options *options.FindOptions, m model.Modeler) (res 
 	}
 
 	return res, nil
-}
-
-// deepCopy is essential deep copy
-func deepCopy(v interface{}) (interface{}, error) {
-	data, err := json.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-
-	r := reflect.New(reflect.TypeOf(v))
-	err = json.Unmarshal(data, r.Interface())
-	if err != nil {
-		return nil, err
-	}
-	return r.Elem().Interface(), err
 }
 
 // Distinct - gets distinct data (fieldName) from collection(collName)
