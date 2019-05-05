@@ -190,11 +190,14 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 	log.Printf("What is the type? %T", cursI)
 	var curs []model.Currency
 	for _, cI := range cursI {
-		log.Printf("what inside? %T, %+v", cI, cI)
+		// log.Printf("what inside? %T, %+v", cI, cI)
 		// c, ok := cI.(*model.Currency)
 		// if ok {
-		// curs = append(curs, *cI.(*model.Currency))
+
 		// }
+
+		curs = append(curs, *cI.(*model.Currency))
+
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("content-type", "application/json")

@@ -2,7 +2,9 @@ package driver
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/gmdmgithub/budget/model"
 	"go.mongodb.org/mongo-driver/bson"
@@ -138,12 +140,13 @@ func GetList(filter bson.M, options *options.FindOptions, m model.Modeler) (res 
 
 	// iterate through all documents
 	for cursor.Next(DBConn.C) {
+		ms, _ := deepCopy(m)
 		// decode the document
-		if err := cursor.Decode(m); err != nil {
+		if err := cursor.Decode(ms); err != nil {
 			log.Printf("Problem with next - GetList error: %+v, res: %+v type %T", err.Error(), res, m)
 			return nil, err
 		}
-		res = append(res, &m)
+		res = append(res, ms)
 	}
 	log.Printf("Res size %d", len(res))
 	// check if the cursor encountered any errors while iterating
@@ -153,6 +156,21 @@ func GetList(filter bson.M, options *options.FindOptions, m model.Modeler) (res 
 	}
 
 	return res, nil
+}
+
+// deepCopy is essential deep copy
+func deepCopy(v interface{}) (interface{}, error) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	r := reflect.New(reflect.TypeOf(v))
+	err = json.Unmarshal(data, r.Interface())
+	if err != nil {
+		return nil, err
+	}
+	return r.Elem().Interface(), err
 }
 
 // Distinct - gets distinct data (fieldName) from collection(collName)
