@@ -7,11 +7,13 @@ import (
 	"github.com/gmdmgithub/budget/model"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// StatementsRange - gets statemts in range of data
+// StatementsRange - gets statements in range of data
 func StatementsRange(r url.Values) ([]model.Statement, error) {
 	filter := bson.M{}
+	options := options.Find()
 
 	layout := "2006-01-02"
 
@@ -31,7 +33,7 @@ func StatementsRange(r url.Values) ([]model.Statement, error) {
 		dt = false
 		log.Printf("Problem with parsing %v", err)
 	}
-	log.Printf("gt is %v and dt is %v", df, dt)
+	// log.Printf("gt is %v and dt is %v", df, dt)
 
 	if df && dt {
 		filter["start_date"] = bson.M{"$gte": tf, "$lte": tt}
@@ -40,29 +42,20 @@ func StatementsRange(r url.Values) ([]model.Statement, error) {
 		// or = append(or, bson.M{"end_date": nil})
 		// filter["$or"] = or
 	}
-
 	if df && !dt {
 		filter["start_date"] = bson.M{"$gte": tf}
 	}
 	// filter := bson.M{"name": bson.M{"$elemMatch": bson.M{"$eq": "golang"}}}
 	if !df && dt {
-		// or := []bson.M{}
-		// or = append(or, bson.M{"end_date": bson.M{"$gte": tt}})
-		// or = append(or, bson.M{"end_date": nil})
-		// filter["$or"] = or
-
 		filter["start_date"] = bson.M{"$lte": tt}
 	}
-
-	// log.Printf("values %v %v and filter %+v", tf, tt, filter)
-
-	return filterStatements(filter)
-
+	return filterStatements(filter, options)
 }
 
-// GetAllStatements - gets all statements in db
+// GetAllStatements - gets all statements in db, no filter no options
 func GetAllStatements() ([]model.Statement, error) {
-	return filterStatements(bson.M{})
+
+	return filterStatements(bson.M{}, options.Find())
 }
 
 // StatementsOnDate get statements from date
@@ -83,37 +76,22 @@ func StatementsOnDate(r url.Values) ([]model.Statement, error) {
 	or = append(or, bson.M{"end_date": nil})
 	filter["$or"] = or
 
-	return filterStatements(filter)
+	options := options.Find()
+
+	return filterStatements(filter, options)
 }
 
-func filterStatements(filter bson.M) ([]model.Statement, error) {
+func filterStatements(filter bson.M, options *options.FindOptions) ([]model.Statement, error) {
 
-	db := DBConn.Mongodb
-	cursor, err := db.Collection("statements").Find(DBConn.C, filter)
+	var s model.Statement
+	res, err := GetList(filter, options, &s)
 	if err != nil {
-		log.Printf("filterStatements error: %+v", err.Error())
+		log.Printf("Problem with get statements %v", res)
 		return nil, err
 	}
-	defer cursor.Close(DBConn.C)
-
-	// iterate through all documents
-	var ms []model.Statement
-	for cursor.Next(DBConn.C) {
-		var m model.Statement
-		// decode the document
-		if err := cursor.Decode(&m); err != nil {
-			log.Printf("filterStatements error: %+v", err.Error())
-			return nil, err
-		}
-		// fmt.Printf("model: %+v", m)
-		ms = append(ms, m)
+	var ss []model.Statement
+	for _, sI := range res {
+		ss = append(ss, *sI.(*model.Statement))
 	}
-	log.Printf("Res size %d", len(ms))
-	// check if the cursor encountered any errors while iterating
-	if err := cursor.Err(); err != nil {
-		log.Printf("filterStatements error: %+v", err.Error())
-		return nil, err
-	}
-
-	return ms, nil
+	return ss, nil
 }

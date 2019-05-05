@@ -19,25 +19,20 @@ import (
 func ConnectMgo(ctx context.Context, cfg *config.Config, db *DB) error {
 
 	// mongodb://[username:password@]host[:port][/[database][?options]]
-	//
 	uri := fmt.Sprintf(
 		"mongodb://%s:%s",
 		cfg.DBS["MONGODB"].Host,
 		cfg.DBS["MONGODB"].Port,
 	)
-
 	client, err := mongo.Connect(
 		ctx,
 		options.Client().ApplyURI(uri),
 	)
-
 	db.C = ctx
-
 	err = client.Ping(ctx, readpref.Primary())
 	if err != nil {
 		return err
 	}
-
 	log.Print("Connected to the DB!")
 	db.Mongodb = client.Database(cfg.DBName)
 
@@ -52,14 +47,12 @@ func Create(m model.Modeler) (*mongo.InsertOneResult, error) {
 		return nil, err
 	}
 	db := DBConn.Mongodb
-
 	// store v in DB - next step
 	res, err := db.Collection(m.ColName()).InsertOne(DBConn.C, m)
 	if err != nil {
 		log.Printf("Problem saving %T ... %+v", m, err)
 		return nil, err
 	}
-
 	return res, nil
 }
 
@@ -71,14 +64,12 @@ func DoOne(m model.Modeler, ID string, next func(m model.Modeler, filter bson.M,
 		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
 		return err
 	}
-
 	log.Printf("Getting object %T with ID: %v", m, _id)
 
 	filter := bson.M{"_id": _id}
 	opts := options.FindOne()
-
+	// next func is in params
 	return next(m, filter, opts)
-
 }
 
 // GetOne - gets one element of specific ID from collection named from struct
@@ -97,7 +88,6 @@ func GetOne(m model.Modeler, filter bson.M, options *options.FindOneOptions) err
 func DeleteOne(m model.Modeler, ID primitive.ObjectID) (*mongo.DeleteResult, error) {
 
 	db := DBConn.Mongodb
-
 	filter := bson.M{"_id": ID}
 	// filter := bson.D{primitive.E{Key: "_id", Value: id}} //- another way to set filter with ID
 	del, err := db.Collection(m.ColName()).DeleteOne(DBConn.C, filter)
@@ -105,7 +95,6 @@ func DeleteOne(m model.Modeler, ID primitive.ObjectID) (*mongo.DeleteResult, err
 		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
 		return nil, err
 	}
-
 	return del, nil
 }
 
@@ -122,7 +111,6 @@ func UpdateOne(m model.Modeler, ID primitive.ObjectID) (*mongo.UpdateResult, err
 		log.Printf("Object %T with ID: %s and error: %v", m, ID, err.Error())
 		return nil, err
 	}
-
 	return res, nil
 }
 
@@ -131,13 +119,11 @@ func GetList(filter bson.M, options *options.FindOptions, m model.Modeler) (res 
 
 	db := DBConn.Mongodb
 	cursor, err := db.Collection(m.ColName()).Find(DBConn.C, filter, options)
-	defer cursor.Close(DBConn.C)
-
 	if err != nil {
 		log.Printf("Start and GetList error: %+v, type %T", err.Error(), m)
 		return nil, err
 	}
-
+	defer cursor.Close(DBConn.C)
 	// iterate through all documents
 	for cursor.Next(DBConn.C) {
 		ms, _ := deepCopy(m)
@@ -154,7 +140,6 @@ func GetList(filter bson.M, options *options.FindOptions, m model.Modeler) (res 
 		log.Printf("Problem with cursor - GetList error: %+v, res: %+v type %T", err.Error(), res, m)
 		return nil, err
 	}
-
 	return res, nil
 }
 
