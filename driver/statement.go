@@ -108,6 +108,7 @@ func filterStatements(filter bson.M) ([]model.Statement, error) {
 		// fmt.Printf("model: %+v", m)
 		ms = append(ms, m)
 	}
+	log.Printf("Res size %d", len(ms))
 	// check if the cursor encountered any errors while iterating
 	if err := cursor.Err(); err != nil {
 		log.Printf("filterStatements error: %+v", err.Error())

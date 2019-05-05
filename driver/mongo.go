@@ -124,38 +124,35 @@ func UpdateOne(m model.Modeler, ID primitive.ObjectID) (*mongo.UpdateResult, err
 	return res, nil
 }
 
-func GetCurrencies(filter bson.M, options *options.FindOptions) ([]model.Currency, error) {
+// GetList - get list from the collection - type interface model.Modeler
+func GetList(filter bson.M, options *options.FindOptions, m model.Modeler) (res []interface{}, err error) {
 
 	db := DBConn.Mongodb
-	// opts := options.Find()
-	ctx := context.Background()
-	cursor, err := db.Collection("currencies").Find(ctx, filter, options)
+	cursor, err := db.Collection(m.ColName()).Find(DBConn.C, filter, options)
+	defer cursor.Close(DBConn.C)
+
 	if err != nil {
-		log.Printf("Start and GetAllCurrencies error: %+v", err.Error())
+		log.Printf("Start and GetAllCurrencies error: %+v, type %T", err.Error(), m)
 		return nil, err
 	}
-
-	defer cursor.Close(ctx)
 
 	// iterate through all documents
-	var mc []model.Currency
-	for cursor.Next(ctx) {
-		var m model.Currency
+	for cursor.Next(DBConn.C) {
 		// decode the document
-		if err := cursor.Decode(&m); err != nil {
-			log.Printf("Problem with next - GetAllCurrencies error: %+v", err.Error())
+		if err := cursor.Decode(m); err != nil {
+			log.Printf("Problem with next - GetList error: %+v, res: %+v type %T", err.Error(), res, m)
 			return nil, err
 		}
-		// fmt.Printf("model: %+v", m)
-		mc = append(mc, m)
+		res = append(res, &m)
 	}
+	log.Printf("Res size %d", len(res))
 	// check if the cursor encountered any errors while iterating
 	if err := cursor.Err(); err != nil {
-		log.Printf("GetAllCurrencies error: %+v", err.Error())
+		log.Printf("Problem with cursor - GetList error: %+v, res: %+v type %T", err.Error(), res, m)
 		return nil, err
 	}
 
-	return mc, nil
+	return res, nil
 }
 
 // Distinct - gets distinct data (fieldName) from collection(collName)

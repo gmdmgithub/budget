@@ -128,14 +128,22 @@ func currencyDate(w http.ResponseWriter, r *http.Request) {
 	filter["code"] = bson.M{"$eq": curCode}
 
 	// proper db query
-	curs, err := driver.GetCurrencies(filter, opts)
+	var cur model.Currency
+	cursI, err := driver.GetList(filter, opts, &cur)
 	if err != nil {
-		log.Printf("Problem with get currencies %v", curs)
+		log.Printf("Problem with get currencies %v", cursI)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	var curs []model.Currency
+	for _, cI := range cursI {
+		c, ok := cI.(*model.Currency)
+		if ok {
+			curs = append(curs, *c)
+		}
+	}
 	// simplify response - object instead array
-	var cur model.Currency
+
 	if len(curs) == 1 {
 		cur = curs[0]
 	} else {
@@ -162,7 +170,7 @@ func currencyDate(w http.ResponseWriter, r *http.Request) {
 func currencies(w http.ResponseWriter, r *http.Request) {
 
 	opt := options.Find()
-
+	// opt.SetLimit(1000)
 	filter := bson.M{}
 
 	recent := r.URL.Query().Get("recent")
@@ -172,16 +180,25 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Recent is true %v", recent)
 		// filter
 	}
-
-	cur, err := driver.GetCurrencies(filter, opt)
+	var cur model.Currency
+	cursI, err := driver.GetList(filter, opt, &cur)
 	if err != nil {
-		log.Printf("Problem with get currencies %v", cur)
+		log.Printf("Problem with get currencies %v", cursI)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	log.Printf("What is the type? %T", cursI)
+	var curs []model.Currency
+	for _, cI := range cursI {
+		log.Printf("what inside? %T, %+v", cI, cI)
+		// c, ok := cI.(*model.Currency)
+		// if ok {
+		// curs = append(curs, *cI.(*model.Currency))
+		// }
+	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("content-type", "application/json")
-	if err := json.NewEncoder(w).Encode(cur); err != nil {
+	if err := json.NewEncoder(w).Encode(curs); err != nil {
 		log.Printf("Problem with encoding currencies %v", cur)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -210,14 +227,22 @@ func currency(w http.ResponseWriter, r *http.Request) {
 	filter["code"] = bson.M{"$eq": curCode}
 
 	// proper db query
-	curs, err := driver.GetCurrencies(filter, opts)
+	var cur model.Currency
+	cursI, err := driver.GetList(filter, opts, &cur)
 	if err != nil {
-		log.Printf("Problem with get currencies %v", curs)
+		log.Printf("Problem with get currencies %v", cursI)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	var curs []model.Currency
+	for _, cI := range cursI {
+		c, ok := cI.(*model.Currency)
+		if ok {
+			curs = append(curs, *c)
+		}
+	}
 	// simplify response - object instead array
-	var cur model.Currency
+
 	if len(curs) == 1 {
 		cur = curs[0]
 	} else {
