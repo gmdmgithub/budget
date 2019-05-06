@@ -16,7 +16,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
-var cL []string
+var currencyCodes []string
 
 type checkTime struct {
 	time  time.Time
@@ -30,7 +30,7 @@ var cT = checkTime{
 // CurrencyRouter - group all routes for currency model
 func CurrencyRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(currencyCxt)
+	r.Use(currencyCtx)
 	r.Get("/", currencies)
 	r.Post("/", createCurrency) //create one currency
 	r.Route("/{curCode}", func(r chi.Router) {
@@ -41,7 +41,7 @@ func CurrencyRouter() http.Handler {
 	return r
 }
 
-func currencyCxt(next http.Handler) http.Handler {
+func currencyCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		//at least once a day check what currencies are stored
@@ -56,10 +56,10 @@ func currencyCxt(next http.Handler) http.Handler {
 				log.Printf("Problem with currency codes %v", err)
 			}
 			if len(res) > 0 {
-				cL = nil
+				currencyCodes = nil
 			}
 			for _, c := range res {
-				cL = append(cL, fmt.Sprintf("%s", c))
+				currencyCodes = append(currencyCodes, fmt.Sprintf("%s", c))
 			}
 		}
 		w.Header().Add("Content-Type", "application/json")
@@ -184,7 +184,7 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 		filter["date"] = bson.M{"$lte": tto}
 		// filter
 		//- first simple ask for each currency separately
-		for _, c := range cL {
+		for _, c := range currencyCodes {
 			filter["code"] = c
 			currencyInterface, err := driver.GetList(filter, opt, &cur)
 			if err != nil {
