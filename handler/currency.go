@@ -62,7 +62,6 @@ func currencyCtx(next http.Handler) http.Handler {
 				currencyCodes = append(currencyCodes, fmt.Sprintf("%s", c))
 			}
 		}
-		w.Header().Add("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
 	})
 }

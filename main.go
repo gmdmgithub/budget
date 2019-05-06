@@ -59,7 +59,7 @@ func run() error {
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
-
+	r.Use(handler.GlobalCtx)
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) { //simple way
 		w.Write([]byte("hi there, home dir"))
 	})

@@ -17,7 +17,6 @@ import (
 // StatementRouter - a completely separate router for administrator routes
 func StatementRouter() http.Handler {
 	r := chi.NewRouter()
-	r.Use(commonMiddleware)
 	r.Get("/", allStatements)
 	r.Post("/", createStatement())     // POST /articles - different way (func is returned)
 	r.Get("/range", rangeStatements)   // GET /statement/data from date to
@@ -33,14 +32,6 @@ func StatementRouter() http.Handler {
 	})
 
 	return r
-}
-func commonMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		w.Header().Add("Content-Type", "application/json")
-
-		next.ServeHTTP(w, r)
-	})
 }
 
 // statementCtx add Statement to the context - or any other necessary objects
