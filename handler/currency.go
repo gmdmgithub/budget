@@ -62,6 +62,7 @@ func currencyCxt(next http.Handler) http.Handler {
 				cL = append(cL, fmt.Sprintf("%s", c))
 			}
 		}
+		w.Header().Add("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
 	})
 }
@@ -90,7 +91,6 @@ func createCurrency(w http.ResponseWriter, r *http.Request) {
 	cur.ID = res.InsertedID.(primitive.ObjectID)
 
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(cur); err != nil {
 		log.Printf("Encode problem %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -155,7 +155,6 @@ func currencyDate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(&cur); err != nil {
 		log.Printf("Problem with encoding currencies %v", cur)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -212,8 +211,6 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 		curs = append(curs, *cI.(*model.Currency))
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("content-type", "application/json")
-
 	if err := json.NewEncoder(w).Encode(curs); err != nil {
 		log.Printf("Problem with encoding currencies %v", cur)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -271,7 +268,6 @@ func currency(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(&cur); err != nil {
 		log.Printf("Problem with encoding currencies %v", cur)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

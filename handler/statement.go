@@ -17,6 +17,7 @@ import (
 // StatementRouter - a completely separate router for administrator routes
 func StatementRouter() http.Handler {
 	r := chi.NewRouter()
+	r.Use(commonMiddleware)
 	r.Get("/", allStatements)
 	r.Post("/", createStatement())     // POST /articles - different way (func is returned)
 	r.Get("/range", rangeStatements)   // GET /statement/data from date to
@@ -33,6 +34,14 @@ func StatementRouter() http.Handler {
 
 	return r
 }
+func commonMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		w.Header().Add("Content-Type", "application/json")
+
+		next.ServeHTTP(w, r)
+	})
+}
 
 // statementCtx add Statement to the context - or any other necessary objects
 func statementCtx(next http.Handler) http.Handler {
@@ -47,6 +56,7 @@ func statementCtx(next http.Handler) http.Handler {
 		}
 		ctx := context.WithValue(r.Context(), "statement", &stmt)
 		log.Printf("Data from DB: %+v with ID: %v", stmt, stID)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -82,8 +92,6 @@ func createStatement() http.HandlerFunc {
 		stmt.ID = res.InsertedID.(primitive.ObjectID)
 
 		w.WriteHeader(http.StatusOK)
-		w.Header().Set("content-type", "application/json")
-
 		if err := json.NewEncoder(w).Encode(stmt); err != nil {
 			log.Printf(" json Problem ... %v\n", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -99,7 +107,7 @@ func rangeStatements(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Printf(" json Problem ... %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -113,7 +121,7 @@ func onDateStatements(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Printf(" json Problem ... %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -128,7 +136,7 @@ func allStatements(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(stmts); err != nil {
 		log.Printf(" json Problem ... %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -149,9 +157,6 @@ func getStatement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("content-type", "application/json")
-
-	// w.Write([]byte(fmt.Sprintf("Specific statement %+v", statement)))
 	if err := json.NewEncoder(w).Encode(statement); err != nil {
 		log.Printf(" json Problem ... %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -190,7 +195,6 @@ func updateStatement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("content-type", "application/json")
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Printf(" json Problem update ... %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -220,8 +224,6 @@ func deleteStatement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Header().Set("content-type", "application/json")
-	// log.Printf("del result %s", res.DeletedCount)
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		log.Printf(" json Problem ... %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

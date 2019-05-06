@@ -19,7 +19,8 @@ type DB struct {
 // DBConn hold connection to the databases
 var DBConn *DB
 
-// deepCopy is essential deep copy
+// deepCopy is essential for copying data between two interfaces (as a data copy)
+// alternalively copy values of struct - but this is general
 func deepCopy(v interface{}) (interface{}, error) {
 	data, err := json.Marshal(v)
 	if err != nil {
