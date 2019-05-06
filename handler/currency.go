@@ -169,38 +169,51 @@ func currencyDate(w http.ResponseWriter, r *http.Request) {
 // currencies - get list of all or lats
 func currencies(w http.ResponseWriter, r *http.Request) {
 
-	opt := options.Find()
 	// opt.SetLimit(1000)
 	filter := bson.M{}
-
+	opt := options.Find()
 	recent := r.URL.Query().Get("recent")
-	log.Printf("give me recent %v", recent)
+	var cursI []interface{}
+	var cur model.Currency
+
 	if recent == "true" {
 		// TODO build filter for the last exchange rate for each currency
 		log.Printf("Recent is true %v", recent)
+		opt.SetLimit(1)
+		opt.Sort = bson.M{"date": -1}
+		tto := time.Now().Add(24 * time.Hour)
+		filter["date"] = bson.M{"$lte": tto}
 		// filter
+		//- first simple ask for each currency separately
+		for _, c := range cL {
+			filter["code"] = c
+			currencyInterface, err := driver.GetList(filter, opt, &cur)
+			if err != nil {
+				log.Printf("Problem with get currencies %v", cursI)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			cursI = append(cursI, currencyInterface...)
+		}
+	} else {
+		var err error
+
+		cursI, err = driver.GetList(filter, opt, &cur)
+		if err != nil {
+			log.Printf("Problem with get currencies %v", cursI)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		log.Printf("Asking all data, %+v", cursI)
 	}
-	var cur model.Currency
-	cursI, err := driver.GetList(filter, opt, &cur)
-	if err != nil {
-		log.Printf("Problem with get currencies %v", cursI)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	log.Printf("What is the type? %T", cursI)
+
 	var curs []model.Currency
 	for _, cI := range cursI {
-		// log.Printf("what inside? %T, %+v", cI, cI)
-		// c, ok := cI.(*model.Currency)
-		// if ok {
-
-		// }
-
 		curs = append(curs, *cI.(*model.Currency))
-
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("content-type", "application/json")
+
 	if err := json.NewEncoder(w).Encode(curs); err != nil {
 		log.Printf("Problem with encoding currencies %v", cur)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

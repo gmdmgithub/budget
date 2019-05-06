@@ -117,6 +117,8 @@ func UpdateOne(m model.Modeler, ID primitive.ObjectID) (*mongo.UpdateResult, err
 // GetList - get list from the collection - type interface model.Modeler
 func GetList(filter bson.M, options *options.FindOptions, m model.Modeler) (res []interface{}, err error) {
 
+	// log.Printf("Params are as follow filter: %+v, opt:%+v, modType: %T", filter, options, m)
+
 	db := DBConn.Mongodb
 	cursor, err := db.Collection(m.ColName()).Find(DBConn.C, filter, options)
 	if err != nil {
