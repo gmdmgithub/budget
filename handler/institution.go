@@ -9,7 +9,9 @@ import (
 	"github.com/gmdmgithub/budget/driver"
 	"github.com/gmdmgithub/budget/model"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/go-chi/chi"
 )
@@ -64,7 +66,32 @@ func createInstitution(w http.ResponseWriter, r *http.Request) {
 func institutions() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
-		w.Write([]byte(fmt.Sprintf("All institutions here!")))
+		filer := bson.M{}
+		opt := options.Find()
+
+		var i model.Institution
+
+		res, err := driver.GetList(filer, opt, &i)
+		if err != nil {
+			log.Printf("Problem with List of Institution: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var insts []model.Institution
+		for _, inst := range res {
+			inst, ok := inst.(*model.Institution)
+			if ok {
+				insts = append(insts, *inst)
+			}
+		}
+		w.WriteHeader(http.StatusOK)
+		if err := json.NewEncoder(w).Encode(&insts); err != nil {
+			log.Printf("Problem with encoding Institutions %v", insts)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+
+		// w.Write([]byte(fmt.Sprintf("All institutions here!")))
 	}
 }
 

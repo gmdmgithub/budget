@@ -160,8 +160,6 @@ func currencyDate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// db.collection.find({"time":{$gte: isoDate,$lt: isoDate}}).sort({"time":1}).limit(1)
-
-	// fmt.Fprintf(w, "Hi there - purposefully instead of w.Write([]byte(\"Hi there currency for one date here\"))")
 }
 
 // currencies - get list of all or lats
