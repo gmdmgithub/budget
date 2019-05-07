@@ -67,7 +67,7 @@ func createStatement() http.HandlerFunc {
 			return
 		}
 
-		stmt.UsrCreated = "1" // temporary 1, should be current user
+		stmt.UsrCreated = "1" //TODO temporary 1, should be current user
 		stmt.Created = time.Now()
 
 		var v model.Modeler = &stmt

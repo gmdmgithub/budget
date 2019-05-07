@@ -136,7 +136,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 
 	usr.GeneratePassword(false)
 	usr.Created = time.Now()
-	usr.UsrCreated = "1"
+	usr.UsrCreated = "1" //TODO change in the future
 
 	var v model.Modeler = &usr
 

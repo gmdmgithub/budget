@@ -14,6 +14,7 @@ type StmntType struct {
 	Code       string             `json:"code" bson:"code"`
 	Investment bool               `json:"investment" bson:"investment"`
 	Loan       bool               `json:"loan" bson:"loan"`
+	Audit
 }
 
 func (s *StmntType) OK() error {
