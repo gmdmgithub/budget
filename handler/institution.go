@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -23,7 +22,7 @@ func InstitutionRouter() http.Handler {
 
 	r.Get("/", institutions())     //all- using a function - like middleware way
 	r.Post("/", createInstitution) //
-	r.Route("/{instID}", func(r chi.Router) {
+	r.Route("/{code}", func(r chi.Router) {
 		r.Get("/", getInstitution) // GET /institution/123
 	})
 
@@ -87,7 +86,7 @@ func institutions() http.HandlerFunc {
 		}
 		w.WriteHeader(http.StatusOK)
 		if err := json.NewEncoder(w).Encode(&insts); err != nil {
-			log.Printf("Problem with encoding Institutions %v", insts)
+			log.Printf("Problem with encoding Institutions %v", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 
@@ -96,5 +95,28 @@ func institutions() http.HandlerFunc {
 }
 
 func getInstitution(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(fmt.Sprintf("One institution here!")))
+
+	filter := bson.M{}
+	opt := options.FindOne()
+
+	// filter["code"] = bson.M{"$regex": `(?i)` + chi.URLParam(r, "code")}
+	// log.Printf("Filter is %+v", filter["code"])
+	filter["code"] = chi.URLParam(r, "code")
+
+	var i model.Institution
+
+	err := driver.GetOne(&i, filter, opt)
+	if err != nil {
+		log.Printf("Problem with Institution %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(&i); err != nil {
+		log.Printf("Problem with encoding Institution %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// w.Write([]byte(fmt.Sprintf("One institution here!")))
 }
