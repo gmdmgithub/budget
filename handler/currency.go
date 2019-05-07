@@ -173,13 +173,11 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 	var cur model.Currency
 
 	if recent == "true" {
-		// TODO build filter for the last exchange rate for each currency
-		log.Printf("Recent is true %v", recent)
 		opt.SetLimit(1)
 		opt.Sort = bson.M{"date": -1}
 		tto := time.Now().Add(24 * time.Hour)
 		filter["date"] = bson.M{"$lte": tto}
-		// filter
+		// TODO - optimize in the future - one query as optimal solution or use goroutine
 		//- first simple ask for each currency separately
 		for _, c := range currencyCodes {
 			filter["code"] = c

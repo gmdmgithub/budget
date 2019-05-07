@@ -40,7 +40,7 @@ func createInstitution(w http.ResponseWriter, r *http.Request) {
 	}
 
 	i.Created = time.Now()
-	i.UsrCreated = "23" //change
+	i.UsrCreated = "23" // TODO change
 	var m model.Modeler = &i
 
 	res, err := driver.Create(m)
