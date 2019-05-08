@@ -12,7 +12,7 @@ type Expense struct {
 	ID       primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Name     string             `json:"name" bson:"name"`
 	Comment  string             `json:"comment,omitempty" bson:"comment,omitempty"`
-	Period   string             `json:"period" bson:"period"`
+	Period   string             `json:"period,omitempty" bson:"period,omitempty"`
 	OneTime  bool               `json:"one_time" bson:"one_time"`
 	Amount   int                `json:"amount" bson:"amount"`
 	Currency string             `json:"currency" bson:"currency"`

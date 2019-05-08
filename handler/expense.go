@@ -1,7 +1,15 @@
 package handler
 
 import (
+	"context"
+	"encoding/json"
 	"net/http"
+	"time"
+
+	"github.com/gmdmgithub/budget/driver"
+	"github.com/gmdmgithub/budget/model"
+	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/go-chi/chi"
 )
@@ -14,7 +22,7 @@ func ExpensesRouter() http.Handler {
 	r.Get("/", expenses)
 	r.Post("/", createExpese)
 
-	r.Route("/{expID}", func(r chi.Router) {
+	r.Route("/{ID}", func(r chi.Router) {
 		r.Use(expenseCtx)
 		r.Get("/", expense)
 		r.Put("/", updateExpense)
@@ -27,9 +35,17 @@ func ExpensesRouter() http.Handler {
 func expenseCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		//TODO! get expense here and put it into the context
+		id := chi.URLParam(r, "ID")
+		var exp model.Expense
+		err := driver.DoOne(&exp, id, driver.GetOne)
+		if err != nil {
+			log.Printf("Problem - no expense in context %s %v", id, err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "expense", &exp)
 
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
@@ -38,11 +54,48 @@ func expenses(w http.ResponseWriter, r *http.Request) {
 }
 
 func expense(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hi there one expense here"))
+	ctx := r.Context()
+	exp, ok := ctx.Value("expense").(*model.Expense)
+	if !ok {
+		log.Printf("Problem - no expense in context")
+		http.Error(w, "Problem no expense in context", http.StatusInternalServerError)
+		return
+	}
+	if err := json.NewEncoder(w).Encode(&exp); err != nil {
+		log.Printf("Problem - no expense in context %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	// w.Write([]byte("Hi there one expense here"))
 }
 
 func createExpese(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Create expense here!"))
+
+	//REMARK - date,to be properly decode, should be in format as follow
+	// "date": "2019-04-01T00:00:00+01:00"
+	var exp model.Expense
+	if err := json.NewDecoder(r.Body).Decode(&exp); err != nil {
+		log.Printf("Problem with decoding body %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	exp.Created = time.Now()
+	exp.UsrCreated = "234" //TODO! Change to proper
+
+	res, err := driver.Create(&exp)
+	if err != nil {
+		log.Printf("Problem with creation expenses %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	exp.ID = res.InsertedID.(primitive.ObjectID)
+
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(&exp); err != nil {
+		log.Printf("Problem with encoding expense %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 }
 
 func updateExpense(w http.ResponseWriter, r *http.Request) {
