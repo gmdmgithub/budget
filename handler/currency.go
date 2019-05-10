@@ -166,12 +166,8 @@ func currencyDate(w http.ResponseWriter, r *http.Request) {
 // currencies - get list of all or lats
 func currencies(w http.ResponseWriter, r *http.Request) {
 
-	// opt.SetLimit(1000)
-	filter := bson.M{}
-	opt := options.Find()
 	recent := r.URL.Query().Get("recent")
 	var cursI []interface{}
-	var cur model.Currency
 
 	if recent == "true" {
 		// TODO - optimize in the future - one query as optimal solution or use goroutine
@@ -183,8 +179,11 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 		wg.Wait() //block till all finished (done)
 		log.Printf("Asking all data, %+v", cursI)
 	} else {
+		// opt.SetLimit(1000)
+		filter := bson.M{}
+		opt := options.Find()
 		var err error
-
+		var cur model.Currency
 		cursI, err = driver.GetList(filter, opt, &cur)
 		if err != nil {
 			log.Printf("Problem with get currencies %v", cursI)
@@ -200,14 +199,15 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(curs); err != nil {
-		log.Printf("Problem with encoding currencies %v", cur)
+		log.Printf("Problem with encoding currencies %v", curs)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 
 	// w.Write([]byte("Hi there all currencies here"))
 }
 
-func readLastCurrency(w *sync.WaitGroup, curCode string, c1 *[]interface{}) {
+func readLastCurrency(w *sync.WaitGroup, curCode string, currenciesList *[]interface{}) {
+	defer w.Done() //unlock one waiting group
 	log.Printf("cur code in goroutine is: %v", curCode)
 
 	opt := options.Find()
@@ -227,8 +227,7 @@ func readLastCurrency(w *sync.WaitGroup, curCode string, c1 *[]interface{}) {
 		// http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	*c1 = append(*c1, currencyInterface...)
-	w.Done() //unlock one waiting group
+	*currenciesList = append(*currenciesList, currencyInterface...) //currencyInterface is a slice
 }
 
 func currency(w http.ResponseWriter, r *http.Request) {
