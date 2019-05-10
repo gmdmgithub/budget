@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gmdmgithub/budget/driver"
@@ -173,22 +174,25 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 	var cur model.Currency
 
 	if recent == "true" {
-		opt.SetLimit(1)
-		opt.Sort = bson.M{"date": -1}
-		tto := time.Now().Add(24 * time.Hour)
-		filter["date"] = bson.M{"$lte": tto}
+
 		// TODO - optimize in the future - one query as optimal solution or use goroutine
+		// approach with goroutine
+		var wg sync.WaitGroup
 		//- first simple ask for each currency separately
 		for _, c := range currencyCodes {
-			filter["code"] = c
-			currencyInterface, err := driver.GetList(filter, opt, &cur)
-			if err != nil {
-				log.Printf("Problem with get currencies %v", cursI)
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			cursI = append(cursI, currencyInterface...)
+			wg.Add(1)
+			log.Printf("cur code outside is: %v", c)
+			go readLastCurrency(&wg, c, &cursI)
+			// currencyInterface, err := driver.GetList(filter, opt, &cur)
+			// if err != nil {
+			// 	log.Printf("Problem with get currencies %v", cursI)
+			// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+			// 	return
+			// }
+			// cursI = append(cursI, currencyInterface...)
 		}
+		wg.Wait()
+		log.Printf("Asking all data, %+v", cursI)
 	} else {
 		var err error
 
@@ -212,6 +216,30 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// w.Write([]byte("Hi there all currencies here"))
+}
+
+func readLastCurrency(w *sync.WaitGroup, curCode string, c1 *[]interface{}) {
+	log.Printf("cur code in goroutine is: %v", f)
+
+	opt := options.Find()
+	opt.SetLimit(1)
+	opt.Sort = bson.M{"date": -1}
+
+	filter := bson.M{}
+	tto := time.Now().Add(24 * time.Hour)
+	filter["date"] = bson.M{"$lte": tto}
+	filter["code"] = curCode
+
+	var cur model.Currency
+
+	currencyInterface, err := driver.GetList(filter, opt, &cur)
+	if err != nil {
+		log.Printf("Problem with get currencies %v", currencyInterface)
+		// http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	*c1 = append(*c1, currencyInterface...)
+	w.Done()
 }
 
 func currency(w http.ResponseWriter, r *http.Request) {
