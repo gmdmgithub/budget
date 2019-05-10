@@ -18,6 +18,7 @@ import (
 )
 
 var currencyCodes []string
+var mut sync.Mutex
 
 type checkTime struct {
 	time  time.Time
@@ -227,7 +228,9 @@ func readLastCurrency(w *sync.WaitGroup, curCode string, currenciesList *[]inter
 		// http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	mut.Lock()                                                      //append result synchronized way
 	*currenciesList = append(*currenciesList, currencyInterface...) //currencyInterface is a slice
+	mut.Unlock()
 }
 
 func currency(w http.ResponseWriter, r *http.Request) {
