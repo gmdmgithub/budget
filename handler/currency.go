@@ -174,24 +174,13 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 	var cur model.Currency
 
 	if recent == "true" {
-
 		// TODO - optimize in the future - one query as optimal solution or use goroutine
-		// approach with goroutine
 		var wg sync.WaitGroup
-		//- first simple ask for each currency separately
 		for _, c := range currencyCodes {
-			wg.Add(1)
-			log.Printf("cur code outside is: %v", c)
+			wg.Add(1) //increment how many waiting groups
 			go readLastCurrency(&wg, c, &cursI)
-			// currencyInterface, err := driver.GetList(filter, opt, &cur)
-			// if err != nil {
-			// 	log.Printf("Problem with get currencies %v", cursI)
-			// 	http.Error(w, err.Error(), http.StatusInternalServerError)
-			// 	return
-			// }
-			// cursI = append(cursI, currencyInterface...)
 		}
-		wg.Wait()
+		wg.Wait() //block till all finished (done)
 		log.Printf("Asking all data, %+v", cursI)
 	} else {
 		var err error
@@ -219,7 +208,7 @@ func currencies(w http.ResponseWriter, r *http.Request) {
 }
 
 func readLastCurrency(w *sync.WaitGroup, curCode string, c1 *[]interface{}) {
-	log.Printf("cur code in goroutine is: %v", f)
+	log.Printf("cur code in goroutine is: %v", curCode)
 
 	opt := options.Find()
 	opt.SetLimit(1)
@@ -239,7 +228,7 @@ func readLastCurrency(w *sync.WaitGroup, curCode string, c1 *[]interface{}) {
 		return
 	}
 	*c1 = append(*c1, currencyInterface...)
-	w.Done()
+	w.Done() //unlock one waiting group
 }
 
 func currency(w http.ResponseWriter, r *http.Request) {
