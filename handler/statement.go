@@ -18,9 +18,9 @@ import (
 func StatementRouter() http.Handler {
 	r := chi.NewRouter()
 	r.Get("/", allStatements)
-	r.Post("/", createStatement())     // POST /articles - different way (func is returned)
-	r.Get("/range", rangeStatements)   // GET /statement/data from date to
-	r.Get("/ondate", onDateStatements) // GET /statement/data from date to
+	r.Post("/", createStatement())      // POST /articles - different way (func is returned)
+	r.Get("/range", rangeStatements)    // GET /statement/data from date to
+	r.Get("/on-date", onDateStatements) // GET /statement/data from date to
 	r.Route("/{stID}", func(r chi.Router) {
 		r.Use(statementCtx)
 		r.Get("/", getStatement)       // GET /statement/123

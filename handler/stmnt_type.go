@@ -83,5 +83,24 @@ func stmntTypes(w http.ResponseWriter, r *http.Request) {
 }
 
 func stmntType(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hi there one statement type here"))
+
+	filter := bson.M{}
+	code := chi.URLParam(r, "code")
+	filter["code"] = code
+	var st model.StmntType
+	opt := options.FindOne()
+
+	err := driver.GetOne(&st, filter, opt)
+	if err != nil {
+		log.Printf("Get statement type problem %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(&st); err != nil {
+		log.Printf("Get statement type problem %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// w.Write([]byte("Hi there one statement type here"))
 }
