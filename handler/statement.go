@@ -174,9 +174,7 @@ func updateStatement(w http.ResponseWriter, r *http.Request) {
 	stmt.Updated = time.Now()
 	stmt.UsrUpdated = "1" //correct in the future
 
-	var m model.Modeler = &stmt
-	res, err := driver.UpdateOne(m, stmt.ID)
-
+	res, err := driver.UpdateOne(&stmt, stmt.ID)
 	if err != nil {
 		log.Printf("Problem update Statement ... %v \n %+v\n", err, r.Body)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -203,9 +201,7 @@ func deleteStatement(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var m model.Modeler = statement
-
-	res, err := driver.DeleteOne(m, statement.ID)
+	res, err := driver.DeleteOne(statement, statement.ID)
 	if err != nil {
 		log.Printf("Problem delete Statement ... %v \n %+v\n", err, r.Body)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

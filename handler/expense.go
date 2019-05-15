@@ -99,9 +99,62 @@ func createExpese(w http.ResponseWriter, r *http.Request) {
 }
 
 func updateExpense(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("PUT for expense here"))
+	ctx := r.Context()
+	exp, ok := ctx.Value("expense").(*model.Expense)
+	if !ok {
+		log.Printf("Problem - no expense in context")
+		http.Error(w, "Problem no expense in context", http.StatusInternalServerError)
+		return
+	}
+
+	var expenseBody model.Expense
+	err := json.NewDecoder(r.Body).Decode(&expenseBody)
+	if err != nil {
+		log.Printf("Problem - no expense in body")
+		http.Error(w, "Problem no expense in body", http.StatusInternalServerError)
+		return
+	}
+
+	expenseBody.ID = exp.ID
+	expenseBody.Created = exp.Created
+	expenseBody.UsrCreated = exp.UsrCreated
+	expenseBody.Updated = time.Now()
+	expenseBody.UsrUpdated = "12345" //correct in the future
+
+	res, err := driver.UpdateOne(&expenseBody, expenseBody.ID)
+	if err != nil {
+		log.Printf("Problem - with update expense")
+		http.Error(w, "Problem - with update expense", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf(" json Problem update ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 }
 
 func deleteExpense(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("delete expense"))
+	ctx := r.Context()
+	exp, ok := ctx.Value("expense").(*model.Expense)
+	if !ok {
+		log.Printf("Problem - no expense in context")
+		http.Error(w, "Problem no expense in context", http.StatusInternalServerError)
+		return
+	}
+	res, err := driver.DeleteOne(exp, exp.ID)
+	if err != nil {
+		log.Printf("Problem delete Expense ... %v \n %+v\n", err, r.Body)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf(" json Problem ... %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// w.Write([]byte("delete expense"))
 }
