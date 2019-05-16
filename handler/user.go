@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/gmdmgithub/budget/model"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/go-chi/chi"
 	"github.com/rs/zerolog/log"
@@ -56,7 +56,32 @@ func usrContext(next http.Handler) http.Handler {
 
 func getAllUsers(w http.ResponseWriter, r *http.Request) {
 
-	w.Write([]byte(fmt.Sprintf("All users here!")))
+	filter := bson.M{}
+	options := options.Find()
+
+	var u model.User
+
+	res, err := driver.GetList(filter, options, &u)
+	if err != nil {
+		log.Printf("Problem to get the list of users %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var us []model.User
+	for _, ui := range res {
+		user, ok := ui.(*model.User)
+		if ok {
+			us = append(us, *user)
+		}
+	}
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(us); err != nil {
+		log.Printf("Problem to get the list of users %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// w.Write([]byte(fmt.Sprintf("All users here!")))
 }
 
 func login(w http.ResponseWriter, r *http.Request) {

@@ -119,7 +119,7 @@ func updateExpense(w http.ResponseWriter, r *http.Request) {
 	expenseBody.Created = exp.Created
 	expenseBody.UsrCreated = exp.UsrCreated
 	expenseBody.Updated = time.Now()
-	expenseBody.UsrUpdated = "12345" //correct in the future
+	expenseBody.UsrUpdated = "12345" //! TODO correct in the future
 
 	res, err := driver.UpdateOne(&expenseBody, expenseBody.ID)
 	if err != nil {
