@@ -2,6 +2,8 @@ package handler
 
 import "net/http"
 
+type contextKey string
+
 // GlobalCtx - func for global middleware - like content-type
 func GlobalCtx(next http.Handler) http.Handler {
 

@@ -17,6 +17,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+const userContext = contextKey("user")
+
 func UserRouter() http.Handler {
 
 	r := chi.NewRouter()
@@ -47,7 +49,7 @@ func usrContext(next http.Handler) http.Handler {
 			http.Error(w, http.StatusText(404), 404)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "user", &usr)
+		ctx := context.WithValue(r.Context(), userContext, &usr)
 		log.Printf("Data from DB: %+v with ID: %v", usr, usrID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 
@@ -188,7 +190,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	usr, ok := ctx.Value("user").(*model.User)
+	usr, ok := ctx.Value(userContext).(*model.User)
 	if !ok {
 		log.Printf("Problem with user context... ")
 		http.Error(w, http.StatusText(422), 422)
@@ -210,7 +212,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	dbUsr, ok := ctx.Value("user").(*model.User)
+	dbUsr, ok := ctx.Value(userContext).(*model.User)
 	if !ok {
 		log.Printf("Problem with user context... ")
 		http.Error(w, http.StatusText(422), 422)
@@ -222,7 +224,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		log.Printf("Problem with user context... ")
+		log.Printf("Problem with user decode... %v", err)
 		http.Error(w, http.StatusText(422), 422)
 		return
 	}
@@ -267,7 +269,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	usr, ok := ctx.Value("user").(*model.User)
+	usr, ok := ctx.Value(userContext).(*model.User)
 	if !ok {
 		log.Printf("Problem with user context... ")
 		http.Error(w, http.StatusText(422), 422)

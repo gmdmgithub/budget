@@ -14,6 +14,8 @@ import (
 	"github.com/go-chi/chi"
 )
 
+const statementContext = contextKey("statement")
+
 // StatementRouter - a completely separate router for administrator routes
 func StatementRouter() http.Handler {
 	r := chi.NewRouter()
@@ -44,7 +46,7 @@ func statementCtx(next http.Handler) http.Handler {
 			http.Error(w, http.StatusText(404), 404)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "statement", &stmt)
+		ctx := context.WithValue(r.Context(), statementContext, &stmt)
 		log.Printf("Data from DB: %+v with ID: %v", stmt, stID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -137,7 +139,7 @@ func getStatement(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	// check the type
 	// log.Printf("what type? %T and values %+v", ctx.Value("statement"), ctx.Value("statement"))
-	statement, ok := ctx.Value("statement").(*model.Statement)
+	statement, ok := ctx.Value(statementContext).(*model.Statement)
 	// statement, ok := ctx.Value("stID").(string)
 	if !ok {
 		log.Print("problem with statement")
@@ -154,7 +156,7 @@ func getStatement(w http.ResponseWriter, r *http.Request) {
 func updateStatement(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	// check the type
-	statement, ok := ctx.Value("statement").(*model.Statement)
+	statement, ok := ctx.Value(statementContext).(*model.Statement)
 	if !ok {
 		log.Print("problem with statement")
 		http.Error(w, http.StatusText(422), 422)
@@ -193,7 +195,7 @@ func deleteStatement(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	// check the type
 	// log.Printf("what type? %T and values %+v", ctx.Value("statement"), ctx.Value("statement"))
-	statement, ok := ctx.Value("statement").(*model.Statement)
+	statement, ok := ctx.Value(statementContext).(*model.Statement)
 	// statement, ok := ctx.Value("stID").(string)
 	if !ok {
 		log.Print("problem with statement")

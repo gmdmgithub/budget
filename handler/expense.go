@@ -9,10 +9,14 @@ import (
 	"github.com/gmdmgithub/budget/driver"
 	"github.com/gmdmgithub/budget/model"
 	"github.com/rs/zerolog/log"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/go-chi/chi"
 )
+
+const expKey = contextKey("expense")
 
 // ExpensesRouter - router for expenses model
 func ExpensesRouter() http.Handler {
@@ -43,19 +47,47 @@ func expenseCtx(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "expense", &exp)
+		ctx := context.WithValue(r.Context(), expKey, &exp)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
 func expenses(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hi there all expenses here"))
+	// TODO! add method - get all
+
+	filter := bson.M{}
+	opt := options.Find()
+
+	var expModel model.Expense
+
+	exps, err := driver.GetList(filter, opt, &expModel)
+	if err != nil {
+		log.Printf("Problem with read all expenses %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var expRes []model.Expense
+
+	for _, val := range exps {
+		exp := *val.(*model.Expense)
+		expRes = append(expRes, exp)
+	}
+
+	w.WriteHeader(http.StatusOK)
+
+	if err := json.NewEncoder(w).Encode(expRes); err != nil {
+		log.Printf("Problem with decode all expenses %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// w.Write([]byte("Hi there all expenses here"))
 }
 
 func expense(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	exp, ok := ctx.Value("expense").(*model.Expense)
+	exp, ok := ctx.Value(expKey).(*model.Expense)
 	if !ok {
 		log.Printf("Problem - no expense in context")
 		http.Error(w, "Problem no expense in context", http.StatusInternalServerError)
@@ -100,7 +132,7 @@ func createExpese(w http.ResponseWriter, r *http.Request) {
 
 func updateExpense(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	exp, ok := ctx.Value("expense").(*model.Expense)
+	exp, ok := ctx.Value(expKey).(*model.Expense)
 	if !ok {
 		log.Printf("Problem - no expense in context")
 		http.Error(w, "Problem no expense in context", http.StatusInternalServerError)
@@ -138,7 +170,7 @@ func updateExpense(w http.ResponseWriter, r *http.Request) {
 
 func deleteExpense(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	exp, ok := ctx.Value("expense").(*model.Expense)
+	exp, ok := ctx.Value(expKey).(*model.Expense)
 	if !ok {
 		log.Printf("Problem - no expense in context")
 		http.Error(w, "Problem no expense in context", http.StatusInternalServerError)
